@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, encodeAddress, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, shortenHex } from "@unlink-xyz/react"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -46,14 +46,7 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  let zkAddress = ""
-  try {
-    if (activeAccount?.masterPublicKey) {
-      zkAddress = encodeAddress(activeAccount.masterPublicKey)
-    }
-  } catch {
-    // masterPublicKey may not be available yet
-  }
+  const zkAddress = activeAccount?.address ?? ""
   const truncated = zkAddress ? shortenHex(zkAddress, 6) : "Loading..."
 
   const copyAddress = () => {

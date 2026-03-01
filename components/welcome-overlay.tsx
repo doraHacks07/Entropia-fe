@@ -1,6 +1,6 @@
 "use client"
 
-import { useUnlink, encodeAddress, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, shortenHex } from "@unlink-xyz/react"
 import { setWelcomeSeen } from "@/lib/onboarding"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { Button } from "@/components/ui/button"
@@ -16,14 +16,7 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
   const { activeAccount } = useUnlink()
   const [copied, setCopied] = useState(false)
 
-  let zkAddress = ""
-  try {
-    if (activeAccount?.masterPublicKey) {
-      zkAddress = encodeAddress(activeAccount.masterPublicKey)
-    }
-  } catch {
-    // masterPublicKey may not be available yet
-  }
+  const zkAddress = activeAccount?.address ?? ""
 
   const copyAddress = () => {
     if (zkAddress) {

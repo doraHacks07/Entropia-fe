@@ -1,6 +1,6 @@
 "use client"
 
-import { useUnlink, encodeAddress, shortenHex, formatAmount } from "@unlink-xyz/react"
+import { useUnlink, shortenHex, formatAmount } from "@unlink-xyz/react"
 import { clearOnboarding } from "@/lib/onboarding"
 import { useMetaMask } from "@/lib/wallet-context"
 import {
@@ -42,14 +42,7 @@ export function SettingsView() {
   const [showingMnemonic, setShowingMnemonic] = useState(false)
   const [mnemonic, setMnemonic] = useState("")
 
-  let zkAddress = ""
-  try {
-    if (activeAccount?.masterPublicKey) {
-      zkAddress = encodeAddress(activeAccount.masterPublicKey)
-    }
-  } catch {
-    // masterPublicKey may not be available yet
-  }
+  const zkAddress = activeAccount?.address ?? ""
 
   const copyAddress = () => {
     if (zkAddress) {

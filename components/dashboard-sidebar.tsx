@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, encodeAddress, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, shortenHex } from "@unlink-xyz/react"
 import { clearOnboarding } from "@/lib/onboarding"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { WalletStatusBadge } from "@/components/wallet-status-badge"
@@ -59,14 +59,7 @@ export function DashboardSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  let zkAddress = ""
-  try {
-    if (activeAccount?.masterPublicKey) {
-      zkAddress = encodeAddress(activeAccount.masterPublicKey)
-    }
-  } catch {
-    // masterPublicKey may not be available yet
-  }
+  const zkAddress = activeAccount?.address ?? ""
   const shortAddress = zkAddress ? shortenHex(zkAddress, 6) : "Loading..."
 
   const copyAddress = () => {

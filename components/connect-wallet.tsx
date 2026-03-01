@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { useUnlink, shortenHex, encodeAddress } from "@unlink-xyz/react"
+import { useUnlink, shortenHex } from "@unlink-xyz/react"
 import { setOnboardingComplete } from "@/lib/onboarding"
 import { useMetaMask } from "@/lib/wallet-context"
 import { NeoBankLogo } from "@/components/neobank-logo"
@@ -91,20 +91,14 @@ export function ConnectWallet() {
       status: status || "(none)",
     })
     if (ready && walletExists && activeAccount) {
-      try {
-        const zkAddress = activeAccount?.masterPublicKey
-          ? encodeAddress(activeAccount.masterPublicKey)
-          : null
-        console.log("[NeoBank Unlink] CONNECTED - Full details:", {
-          zkAddress,
-          zkAddressShort: zkAddress ? shortenHex(zkAddress, 6) : null,
-          activeAccountIndex,
-          accountsCount: accounts?.length,
-          chainId,
-        })
-      } catch (e) {
-        console.log("[NeoBank Unlink] CONNECTED but could not encode address:", e)
-      }
+      const zkAddress = activeAccount?.address ?? null
+      console.log("[NeoBank Unlink] CONNECTED - Full details:", {
+        zkAddress,
+        zkAddressShort: zkAddress ? shortenHex(zkAddress, 6) : null,
+        activeAccountIndex,
+        accountsCount: accounts?.length,
+        chainId,
+      })
     }
   }, [ready, walletExists, activeAccount, accounts, activeAccountIndex, chainId, busy, status])
 
