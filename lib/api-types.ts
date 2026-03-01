@@ -44,3 +44,42 @@ export interface SensitiveTransferRecord {
   memo?: string
   timestamp: string
 }
+
+export type PaymentMode = "fast" | "delayed"
+
+export type BackendTxStatus =
+  | "INITIATED"
+  | "AWAITING_DEPOSIT"
+  | "CONFIRMING"
+  | "ROUTING"
+  | "SETTLING"
+  | "COMPLETED"
+  | "FAILED"
+
+export interface InitiatePaymentRequest {
+  sender_unlink_id: string
+  vendor_unlink_id: string
+  amount: string
+  mode: PaymentMode
+  hop_count?: number
+}
+
+export interface InitiatePaymentResponse {
+  internal_tx_id: string
+  deposit_address: string
+  estimated_fee: string
+}
+
+export interface BackendPaymentStatusResponse {
+  internal_tx_id: string
+  status: BackendTxStatus
+  final_tx_hash: string | null
+  updated_at: string
+  error?: string
+}
+
+export interface BackendVerifyResponse {
+  verified: boolean
+  tx_hash?: string
+  status?: "not_found"
+}
