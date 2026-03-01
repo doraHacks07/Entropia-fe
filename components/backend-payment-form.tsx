@@ -168,7 +168,7 @@ export function BackendPaymentForm() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Backend Orchestrated Payment</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Initiate Fast/Delayed payments through backend routing engine.
+          Initiate Fast/Delayed MON payments through backend routing engine.
         </p>
       </div>
 
@@ -176,7 +176,7 @@ export function BackendPaymentForm() {
         <CardHeader>
           <CardTitle>Initiate Payment</CardTitle>
           <CardDescription>
-            Sender comes from your active Unlink account. Vendor is EVM address in this phase.
+            Sender comes from your active Unlink account. Vendor is EVM address in this phase. Amount is MON in wei.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -197,7 +197,7 @@ export function BackendPaymentForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="amountUi">Amount</Label>
+              <Label htmlFor="amountUi">Amount (MON)</Label>
               <Input
                 id="amountUi"
                 type="number"
@@ -278,7 +278,7 @@ export function BackendPaymentForm() {
                 </Button>
               </div>
             </div>
-            <Row label="Estimated Fee (atomic)" value={tx.estimatedFee} mono />
+            <Row label="Estimated Fee (wei)" value={tx.estimatedFee} mono />
             <div className="flex items-center justify-between rounded-md bg-secondary/40 px-3 py-2">
               <span className="text-sm text-muted-foreground">Backend Status</span>
               <div className="flex items-center gap-2">

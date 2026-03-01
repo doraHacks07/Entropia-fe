@@ -18,3 +18,5 @@ In backend mode, transfer tab uses:
 - `POST /api/initiate`
 - `GET /api/status/:internalTxId`
 - `GET /api/verify/:txHash`
+
+Backend orchestration currently runs MON native payment flow (amounts in wei).

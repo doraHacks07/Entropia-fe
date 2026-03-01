@@ -12,6 +12,7 @@ This document describes the REST API endpoints used by the NeoBank frontend. Bac
   - `POST {BACKEND}/api/initiate`
   - `GET {BACKEND}/api/status/:internalTxId`
   - `GET {BACKEND}/api/verify/:txHash`
+- Current backend orchestration scope uses MON native flow. Amounts should be sent as MON wei strings.
 - Legacy Next.js local routes (`/api/transfer*`) are kept for compatibility and non-authoritative record flows.
 
 **Base URL:** `/api` (relative to the application root)
