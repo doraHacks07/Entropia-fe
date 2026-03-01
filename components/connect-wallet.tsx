@@ -135,7 +135,7 @@ export function ConnectWallet() {
             type: "unlink-wallet-created",
             createdAt: new Date().toISOString(),
           }),
-        })
+        }).catch(() => {})
       } catch {
         // best-effort
       }

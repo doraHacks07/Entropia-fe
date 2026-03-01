@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, useWithdraw, useTxStatus, formatAmount, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, useWithdraw, useTxStatus, formatAmount, shortenHex, parseAmount } from "@unlink-xyz/react"
 import {
   Card,
   CardContent,
@@ -91,11 +91,13 @@ export function SensitiveTransferForm() {
 
   const handleSubmit = async () => {
     try {
-      const decimals = 18
-      const parts = form.amount.split(".")
-      const whole = parts[0]
-      const frac = (parts[1] || "").padEnd(decimals, "0").slice(0, decimals)
-      const amountBigInt = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac)
+      let amountBigInt: bigint
+      try {
+        amountBigInt = parseAmount(form.amount, 18)
+      } catch {
+        setErrors({ ...errors, amount: "Enter a valid amount" })
+        return
+      }
 
       const result = await withdraw([
         {
@@ -110,7 +112,7 @@ export function SensitiveTransferForm() {
 
       // POST to backend
       try {
-        await fetch("/api/transfer/sensitive", {
+        const res = await fetch("/api/transfer/sensitive", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -122,6 +124,10 @@ export function SensitiveTransferForm() {
             purpose: form.purpose,
           }),
         })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.warn("[NeoBank] Withdrawal record failed:", err)
+        }
       } catch {
         // best-effort
       }
@@ -356,9 +362,26 @@ export function SensitiveTransferForm() {
                   {errors.amount}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Available: {formattedBalance}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Available: {formattedBalance}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs text-primary hover:text-primary/80"
+                  onClick={() => {
+                    if (currentBalance) {
+                      setForm({ ...form, amount: formattedBalance })
+                      setErrors({ ...errors, amount: undefined })
+                    }
+                  }}
+                  disabled={!currentBalance || currentBalance === 0n}
+                >
+                  Max
+                </Button>
+              </div>
             </div>
           </div>
 

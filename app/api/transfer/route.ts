@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createTransfer, getTransfers } from "@/lib/store"
+
+export async function GET() {
+  try {
+    const transfers = getTransfers()
+    return NextResponse.json({
+      success: true,
+      data: transfers,
+    })
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch transfers" },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { type, token, recipient, amount, relayId, memo } = body
 
-    // Validate
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Token is required" },
@@ -25,21 +40,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In production, store the transfer record in your database
-    // The actual transfer is handled client-side by the Unlink SDK
-    console.log("[NeoBank] Private send recorded:", {
+    const record = createTransfer({
       type: type || "private-send",
       token,
       recipient,
-      amount,
-      relayId: relayId || null,
-      memo: memo || null,
-      timestamp: new Date().toISOString(),
+      amount: String(amount),
+      relayId: relayId ?? null,
+      memo: memo ?? undefined,
     })
 
     return NextResponse.json({
       success: true,
-      relayId,
+      data: record,
       message: "Transfer recorded",
     })
   } catch {

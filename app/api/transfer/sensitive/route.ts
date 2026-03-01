@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server"
+import { createSensitiveTransfer, getSensitiveTransfers } from "@/lib/store"
+
+export async function GET() {
+  try {
+    const transfers = getSensitiveTransfers()
+    return NextResponse.json({
+      success: true,
+      data: transfers,
+    })
+  } catch {
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch withdrawals" },
+      { status: 500 }
+    )
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { type, token, recipient, amount, relayId, purpose } = body
 
-    // Validate
     if (!token) {
       return NextResponse.json(
         { success: false, error: "Token is required" },
@@ -14,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
     if (!recipient || !/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
       return NextResponse.json(
-        { success: false, error: "Invalid recipient address" },
+        { success: false, error: "Invalid recipient address (must be 0x...)" },
         { status: 400 }
       )
     }
@@ -25,21 +40,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // In production, store the withdrawal record in your database
-    // The actual withdrawal is handled client-side by the Unlink SDK
-    console.log("[NeoBank] Withdrawal recorded:", {
+    const record = createSensitiveTransfer({
       type: type || "withdrawal",
       token,
       recipient,
-      amount,
-      relayId: relayId || null,
-      purpose: purpose || null,
-      timestamp: new Date().toISOString(),
+      amount: String(amount),
+      relayId: relayId ?? null,
+      purpose: purpose ?? undefined,
     })
 
     return NextResponse.json({
       success: true,
-      relayId,
+      data: record,
       message: "Withdrawal recorded",
     })
   } catch {

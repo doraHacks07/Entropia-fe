@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, useSend, useTxStatus, formatAmount, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, useSend, useTxStatus, formatAmount, shortenHex, parseAmount } from "@unlink-xyz/react"
 import {
   Card,
   CardContent,
@@ -46,6 +46,26 @@ const KNOWN_TOKENS = [
   { label: "Native Token", value: "0x0000000000000000000000000000000000000000" },
 ]
 
+const RECENT_RECIPIENTS_KEY = "neobank-recent-recipients"
+const MAX_RECENT = 5
+
+function getRecentRecipients(): string[] {
+  if (typeof window === "undefined") return []
+  try {
+    const raw = localStorage.getItem(RECENT_RECIPIENTS_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function addRecentRecipient(addr: string) {
+  if (typeof window === "undefined" || !addr?.startsWith("unlink1")) return
+  const recent = getRecentRecipients().filter((r) => r !== addr)
+  recent.unshift(addr)
+  localStorage.setItem(RECENT_RECIPIENTS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)))
+}
+
 export function TransferForm() {
   const { balances: rawBalances, busy, status } = useUnlink()
   const balances = rawBalances || {}
@@ -60,6 +80,7 @@ export function TransferForm() {
     memo: "",
   })
   const [errors, setErrors] = useState<Partial<TransferData>>({})
+  const recentRecipients = getRecentRecipients()
 
   const txStatus = useTxStatus(relayId ?? undefined)
 
@@ -92,12 +113,13 @@ export function TransferForm() {
 
   const handleSubmit = async () => {
     try {
-      // Parse amount to bigint (assuming 18 decimals)
-      const decimals = 18
-      const parts = form.amount.split(".")
-      const whole = parts[0]
-      const frac = (parts[1] || "").padEnd(decimals, "0").slice(0, decimals)
-      const amountBigInt = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac)
+      let amountBigInt: bigint
+      try {
+        amountBigInt = parseAmount(form.amount, 18)
+      } catch {
+        setErrors({ ...errors, amount: "Enter a valid amount" })
+        return
+      }
 
       const result = await send([
         {
@@ -108,11 +130,12 @@ export function TransferForm() {
       ])
 
       setRelayId(result.relayId)
+      addRecentRecipient(form.recipient)
       setStep("success")
 
       // POST to backend for record-keeping
       try {
-        await fetch("/api/transfer", {
+        const res = await fetch("/api/transfer", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -124,6 +147,10 @@ export function TransferForm() {
             memo: form.memo,
           }),
         })
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}))
+          console.warn("[NeoBank] Transfer record failed:", err)
+        }
       } catch {
         // best-effort
       }
@@ -366,6 +393,22 @@ export function TransferForm() {
               }}
               className="h-12 bg-input border-border font-mono text-sm text-foreground placeholder:text-muted-foreground"
             />
+            {recentRecipients.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {recentRecipients.map((addr) => (
+                  <button
+                    key={addr}
+                    type="button"
+                    onClick={() =>
+                      setForm({ ...form, recipient: addr })
+                    }
+                    className="text-xs px-2 py-1 rounded-md bg-secondary/50 hover:bg-secondary text-muted-foreground hover:text-foreground font-mono transition-colors"
+                  >
+                    {shortenHex(addr, 4)}
+                  </button>
+                ))}
+              </div>
+            )}
             {errors.recipient && (
               <div className="flex items-center gap-1.5 text-xs text-destructive">
                 <AlertCircle className="h-3 w-3" />
@@ -432,9 +475,26 @@ export function TransferForm() {
                   {errors.amount}
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                Available: {formattedBalance}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-muted-foreground">
+                  Available: {formattedBalance}
+                </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-xs text-primary hover:text-primary/80"
+                  onClick={() => {
+                    if (currentBalance) {
+                      setForm({ ...form, amount: formattedBalance })
+                      setErrors({ ...errors, amount: undefined })
+                    }
+                  }}
+                  disabled={!currentBalance || currentBalance === 0n}
+                >
+                  Max
+                </Button>
+              </div>
             </div>
           </div>
 

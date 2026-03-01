@@ -240,40 +240,39 @@ export function MetaMaskProvider({
       })) as string
       log("7. Final chainId", { finalChainId })
 
-      log("8. POSTing to /api/wallet/connect")
+      log("8. Fetching balance")
+      const hexBalance = (await ethereum.request({
+        method: "eth_getBalance",
+        params: [accounts[0], "latest"],
+      })) as string
+
+      log("9. POSTing to /api/wallet/connect")
       try {
         await fetch("/api/wallet/connect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            address: accounts[0],
+            type: "metamask-connect",
+            metamaskAddress: accounts[0],
             chainId: finalChainId,
+            balanceHex: hexBalance,
             connectedAt: new Date().toISOString(),
           }),
         })
-        log("8a. API call completed")
+        log("9a. API call completed")
       } catch (apiErr) {
-        log("8b. API call failed (non-fatal)", apiErr)
+        log("9b. API call failed (non-fatal)", apiErr)
       }
 
-      log("9. Setting connected state")
+      log("10. Setting connected state")
       setState((prev) => ({
         ...prev,
         publicAddress: accounts[0],
         isMetaMaskConnected: true,
         isConnecting: false,
         chainId: finalChainId,
-        error: null,
-      }))
-
-      log("10. Fetching balance")
-      const hexBalance = (await ethereum.request({
-        method: "eth_getBalance",
-        params: [accounts[0], "latest"],
-      })) as string
-      setState((prev) => ({
-        ...prev,
         balance: parseHexToBigInt(hexBalance),
+        error: null,
       }))
       log("11. CONNECTION COMPLETE", {
         address: accounts[0],
