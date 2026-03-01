@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useUnlink, parseAmount, shortenHex } from "@unlink-xyz/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,13 @@ interface BackendPaymentFormData {
 }
 
 const FINAL_STATES = new Set(["COMPLETED", "FAILED"])
+const STATUS_POLL_MS: Partial<Record<BackendPaymentStatusResponse["status"], number>> = {
+  INITIATED: 4000,
+  AWAITING_DEPOSIT: 5000,
+  CONFIRMING: 5000,
+  ROUTING: 3000,
+  SETTLING: 3000,
+}
 
 export function BackendPaymentForm() {
   const { activeAccount } = useUnlink()
@@ -43,6 +50,7 @@ export function BackendPaymentForm() {
   } | null>(null)
   const [status, setStatus] = useState<BackendPaymentStatusResponse | null>(null)
   const [verifyState, setVerifyState] = useState<"idle" | "verified" | "not_found" | "error">("idle")
+  const hadPollError = useRef(false)
 
   const senderId = activeAccount?.address ?? ""
 
@@ -54,12 +62,34 @@ export function BackendPaymentForm() {
     if (!tx?.internalTxId) return
 
     let alive = true
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
+    const scheduleNext = (nextStatus?: BackendPaymentStatusResponse["status"]) => {
+      if (!alive) return
+      if (nextStatus && FINAL_STATES.has(nextStatus)) return
+      const delay = (nextStatus && STATUS_POLL_MS[nextStatus]) || 8000
+      timeoutId = setTimeout(() => {
+        poll().catch(() => undefined)
+      }, delay)
+    }
+
     const poll = async () => {
       try {
         setStatusLoading(true)
         const next = await getPaymentStatus(tx.internalTxId)
         if (!alive) return
-        setStatus(next)
+        hadPollError.current = false
+        setStatus((prev) => {
+          if (
+            prev &&
+            prev.status === next.status &&
+            prev.final_tx_hash === next.final_tx_hash &&
+            prev.updated_at === next.updated_at &&
+            prev.error === next.error
+          ) {
+            return prev
+          }
+          return next
+        })
         upsertBackendTxRecord({
           internalTxId: next.internal_tx_id,
           vendorAddress: tx.vendorAddress,
@@ -84,26 +114,27 @@ export function BackendPaymentForm() {
             setVerifyState("error")
           }
         }
+        scheduleNext(next.status)
       } catch (error) {
         if (!alive) return
-        const message = error instanceof Error ? error.message : "Failed to read status"
-        toast.error(message)
+        if (!hadPollError.current) {
+          const message = error instanceof Error ? error.message : "Failed to read status"
+          toast.error(message)
+          hadPollError.current = true
+        }
+        scheduleNext()
       } finally {
         if (alive) setStatusLoading(false)
       }
     }
 
     poll().catch(() => undefined)
-    const interval = setInterval(() => {
-      if (status && FINAL_STATES.has(status.status)) return
-      poll().catch(() => undefined)
-    }, 4000)
 
     return () => {
       alive = false
-      clearInterval(interval)
+      if (timeoutId) clearTimeout(timeoutId)
     }
-  }, [status, tx, verifyState])
+  }, [tx, verifyState])
 
   const handleInitiate = async () => {
     if (!canSubmit) return
