@@ -7,6 +7,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       data: transfers,
+      legacy: true,
     })
   } catch {
     return NextResponse.json(
@@ -55,7 +56,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: record,
-      message: "Withdrawal recorded",
+      message: "Withdrawal recorded (legacy route)",
+      legacy: true,
     })
   } catch {
     return NextResponse.json(

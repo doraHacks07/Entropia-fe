@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
     }
 
     const { id, timestamp } = saveWalletEvent(payload)
-    console.log("[NeoBank] Wallet event:", { id, ...payload, timestamp })
 
     return NextResponse.json({
       success: true,

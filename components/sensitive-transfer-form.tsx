@@ -41,7 +41,7 @@ interface WithdrawData {
   amount: string
   token: string
   purpose: string
-  privacyLevel: "standard" | "enhanced" | "maximum"
+  privacyLevel: "standard" | "sensitive"
   encryptedMemo: boolean
   memo: string
   passphrase: string
@@ -49,8 +49,7 @@ interface WithdrawData {
 
 const PRIVACY_LEVELS = [
   { value: "standard", label: "Standard", desc: "Basic privacy, faster processing" },
-  { value: "enhanced", label: "Enhanced", desc: "Additional obfuscation layers" },
-  { value: "maximum", label: "Maximum", desc: "Highest privacy, may take longer" },
+  { value: "sensitive", label: "Sensitive", desc: "Extra obfuscation layers" },
 ] as const
 
 const KNOWN_TOKENS = [
@@ -103,7 +102,7 @@ export function SensitiveTransferForm() {
     return Object.keys(newErrors).length === 0
   }
 
-  const needsPassphrase = form.encryptedMemo || form.privacyLevel === "enhanced" || form.privacyLevel === "maximum"
+  const needsPassphrase = form.encryptedMemo || form.privacyLevel === "sensitive"
 
   const handleReview = () => {
     if (validate()) {
@@ -412,10 +411,10 @@ export function SensitiveTransferForm() {
     <div className="mx-auto max-w-lg">
       <div className="mb-6">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Step 1</span>
+          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Withdraw</span>
           <ShieldAlert className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Sensitive Transfer
+            Withdraw to Public Address
           </h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -540,7 +539,7 @@ export function SensitiveTransferForm() {
             </Label>
             <Select
               value={form.privacyLevel}
-              onValueChange={(v: "standard" | "enhanced" | "maximum") =>
+              onValueChange={(v: "standard" | "sensitive") =>
                 setForm({ ...form, privacyLevel: v })
               }
             >

@@ -313,3 +313,32 @@
   animation: border-glow 8s linear infinite;
 }
 
+@keyframes coin-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.95; }
+}
+
+.animate-coin-pulse {
+  animation: coin-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes chunk-appear {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-chunk-appear {
+  animation: chunk-appear 0.5s ease-out forwards;
+}
+
+@keyframes chunk-split {
+  0% { transform: scaleY(0); opacity: 0; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+.animate-chunk-split {
+  animation: chunk-split 0.4s ease-out forwards;
+  transform-origin: center top;
+}
+

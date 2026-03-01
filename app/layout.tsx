@@ -25,9 +25,14 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'NeoBank - Onchain Self-Custodial Bank',
-  description: 'Your financial life, private and onchain. Self-custodial banking with full privacy.',
-  generator: 'v0.app',
+  title: 'NeoBank — Private Self-Custodial Banking',
+  description: 'Your financial life, private and onchain. Self-custodial banking with ZK privacy. Deposit, transfer, and withdraw with full control.',
+  keywords: ['NeoBank', 'privacy', 'self-custodial', 'banking', 'crypto', 'ZK', 'Unlink'],
+  openGraph: {
+    title: 'NeoBank — Private Self-Custodial Banking',
+    description: 'Your financial life, private and onchain. Self-custodial banking with ZK privacy.',
+    type: 'website',
+  },
   icons: {
     icon: [
       {
@@ -52,6 +57,8 @@ export const viewport: Viewport = {
     { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
     { media: '(prefers-color-scheme: dark)', color: '#0d0f1a' },
   ],
+  width: 'device-width',
+  initialScale: 1,
   userScalable: false,
 }
 

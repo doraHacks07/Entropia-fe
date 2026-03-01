@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useUnlinkHistory, formatAmount, shortenHex } from "@unlink-xyz/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,7 @@ import {
   Loader2,
   ShieldAlert,
 } from "lucide-react"
+import { readBackendTxRecords } from "@/lib/backend-tx-store"
 
 type FilterType = "all" | "send" | "deposit" | "withdraw"
 
@@ -21,6 +22,7 @@ export function TransactionHistory() {
   const { history, loading, error, refresh } = useUnlinkHistory()
   const [search, setSearch] = useState("")
   const [filter, setFilter] = useState<FilterType>("all")
+  const backendRecords = useMemo(() => readBackendTxRecords(), [])
 
   const filtered = (history || []).filter((entry) => {
     const matchesSearch =
@@ -95,6 +97,39 @@ export function TransactionHistory() {
       )}
 
       {/* Transactions */}
+      {backendRecords.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-semibold text-card-foreground">
+              Backend Orchestrated Payments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {backendRecords.map((record) => (
+              <div
+                key={record.internalTxId}
+                className="flex items-center justify-between rounded-lg px-4 py-3 transition-colors hover:bg-secondary/30"
+              >
+                <div>
+                  <p className="text-sm font-medium text-card-foreground">
+                    {record.mode === "fast" ? "Fast" : "Delayed"} payment
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {shortenHex(record.internalTxId, 6)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-mono text-card-foreground">{record.amountAtomic}</p>
+                  <Badge className="text-[10px] h-5 mt-1" variant="outline">
+                    {record.status}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Card className="bg-card border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-card-foreground">

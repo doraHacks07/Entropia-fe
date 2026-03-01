@@ -2,6 +2,19 @@
 
 This document describes the REST API endpoints used by the NeoBank frontend. Backend developers can use this as a reference for integration, replication, or extension.
 
+## Payment orchestration mode
+
+- The frontend now supports backend-orchestrated payments via the `neobank-backend` service.
+- Configure:
+  - `NEXT_PUBLIC_BACKEND_BASE_URL` (example: `http://localhost:3000`)
+  - `NEXT_PUBLIC_PAYMENT_FLOW=backend|legacy`
+- In `backend` mode, payment initiation/status/verification uses:
+  - `POST {BACKEND}/api/initiate`
+  - `GET {BACKEND}/api/status/:internalTxId`
+  - `GET {BACKEND}/api/verify/:txHash`
+- Current backend orchestration scope uses MON native flow. Amounts should be sent as MON wei strings.
+- Legacy Next.js local routes (`/api/transfer*`) are kept for compatibility and non-authoritative record flows.
+
 **Base URL:** `/api` (relative to the application root)
 
 **Content-Type:** All POST requests expect `application/json`.
