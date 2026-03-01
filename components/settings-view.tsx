@@ -1,6 +1,7 @@
 "use client"
 
-import { useUnlink, encodeAddress, shortenHex } from "@unlink-xyz/react"
+import { useUnlink, encodeAddress, shortenHex, formatAmount } from "@unlink-xyz/react"
+import { clearOnboarding } from "@/lib/onboarding"
 import { useMetaMask } from "@/lib/wallet-context"
 import {
   Card,
@@ -13,7 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Copy, Check, Shield, Bell, Globe, Key, Users, Download } from "lucide-react"
+import { Copy, Check, Shield, Bell, Globe, Key, Users, Download, RefreshCw, LogOut } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
@@ -24,12 +25,18 @@ export function SettingsView() {
     accounts,
     chainId,
     exportMnemonic,
-    clearWallet,
     createAccount,
     switchAccount,
     busy,
   } = useUnlink()
-  const { publicAddress, isMetaMaskConnected } = useMetaMask()
+  const {
+    publicAddress,
+    isMetaMaskConnected,
+    balance,
+    isWrongNetwork,
+    switchToMonadTestnet,
+    disconnectMetaMask,
+  } = useMetaMask()
 
   const [copied, setCopied] = useState(false)
   const [showingMnemonic, setShowingMnemonic] = useState(false)
@@ -127,13 +134,45 @@ export function SettingsView() {
             </div>
           </div>
           {isMetaMaskConnected && publicAddress && (
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                MetaMask (Deposits)
-              </span>
-              <span className="text-sm font-mono text-card-foreground">
-                {shortenHex(publicAddress, 6)}
-              </span>
+            <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  MetaMask (Deposits)
+                </span>
+                <span className="text-sm font-mono text-card-foreground">
+                  {shortenHex(publicAddress, 6)}
+                </span>
+              </div>
+              {balance !== null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Balance</span>
+                  <span className="text-sm text-card-foreground">
+                    {formatAmount(balance, 18)} MON
+                  </span>
+                </div>
+              )}
+              <div className="flex gap-2 pt-2">
+                {isWrongNetwork && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => switchToMonadTestnet()}
+                    className="border-border text-foreground gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Switch to Monad Testnet
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => disconnectMetaMask()}
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10 gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Disconnect MetaMask
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -315,10 +354,13 @@ export function SettingsView() {
         <CardContent>
           <Button
             variant="destructive"
-            onClick={() => clearWallet()}
+            onClick={() => {
+              clearOnboarding()
+              window.location.href = "/?reset=1"
+            }}
             className="w-full"
           >
-            Clear Wallet & Data
+            Clear Wallet & Start Fresh
           </Button>
           <p className="mt-2 text-xs text-muted-foreground text-center">
             Make sure you have backed up your recovery phrase before clearing.

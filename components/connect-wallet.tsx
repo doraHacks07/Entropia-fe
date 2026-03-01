@@ -1,7 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { useUnlink } from "@unlink-xyz/react"
+import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useUnlink, shortenHex, encodeAddress } from "@unlink-xyz/react"
+import { setOnboardingComplete } from "@/lib/onboarding"
+import { useMetaMask } from "@/lib/wallet-context"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,14 +22,91 @@ import {
   KeyRound,
   Plus,
   Download,
+  Wallet,
 } from "lucide-react"
 import { toast } from "sonner"
 
 type OnboardStep = "landing" | "creating" | "mnemonic" | "importing" | "creating-account"
 
+const DEBUG_UNLINK = true
+function logUnlink(step: string, data?: object) {
+  if (DEBUG_UNLINK) {
+    console.log(`[NeoBank Unlink] ${step}`, data ?? "")
+  }
+}
+
 export function ConnectWallet() {
-  const { ready, walletExists, activeAccount, createWallet, importWallet, createAccount, busy, status } =
-    useUnlink()
+  const router = useRouter()
+  const {
+    ready,
+    walletExists,
+    activeAccount,
+    accounts,
+    activeAccountIndex,
+    chainId,
+    createWallet,
+    importWallet,
+    createAccount,
+    busy,
+    status,
+  } = useUnlink()
+  const {
+    connectMetaMask,
+    isConnecting,
+    isMetaMaskConnected,
+    publicAddress,
+    error,
+    clearError,
+  } = useMetaMask()
+
+  useEffect(() => {
+    if (error) {
+      console.log("[NeoBank ConnectWallet] Error from MetaMask:", error)
+      toast.error(error)
+    }
+  }, [error])
+
+  const hasShownConnectToast = useRef(false)
+  useEffect(() => {
+    if (isMetaMaskConnected && publicAddress && !hasShownConnectToast.current) {
+      hasShownConnectToast.current = true
+      console.log("[NeoBank ConnectWallet] MetaMask connected successfully", {
+        address: publicAddress.slice(0, 10) + "...",
+      })
+      toast.success("MetaMask connected! Now create a private wallet to continue.")
+    }
+    if (!isMetaMaskConnected) hasShownConnectToast.current = false
+  }, [isMetaMaskConnected, publicAddress])
+
+  useEffect(() => {
+    if (!DEBUG_UNLINK) return
+    logUnlink("State update:", {
+      ready,
+      walletExists,
+      hasActiveAccount: !!activeAccount,
+      activeAccountIndex,
+      accountsCount: accounts?.length ?? 0,
+      chainId,
+      busy,
+      status: status || "(none)",
+    })
+    if (ready && walletExists && activeAccount) {
+      try {
+        const zkAddress = activeAccount?.masterPublicKey
+          ? encodeAddress(activeAccount.masterPublicKey)
+          : null
+        console.log("[NeoBank Unlink] CONNECTED - Full details:", {
+          zkAddress,
+          zkAddressShort: zkAddress ? shortenHex(zkAddress, 6) : null,
+          activeAccountIndex,
+          accountsCount: accounts?.length,
+          chainId,
+        })
+      } catch (e) {
+        console.log("[NeoBank Unlink] CONNECTED but could not encode address:", e)
+      }
+    }
+  }, [ready, walletExists, activeAccount, accounts, activeAccountIndex, chainId, busy, status])
 
   const [step, setStep] = useState<OnboardStep>("landing")
   const [mnemonic, setMnemonic] = useState("")
@@ -35,12 +115,18 @@ export function ConnectWallet() {
   const [copied, setCopied] = useState(false)
 
   const handleCreateWallet = async () => {
+    logUnlink("1. handleCreateWallet called")
     setStep("creating")
     try {
+      logUnlink("2. Calling createWallet()...")
       const result = await createWallet()
+      logUnlink("3. createWallet result", {
+        hasMnemonic: !!result?.mnemonic,
+        wordCount: result?.mnemonic?.split(" ")?.length,
+      })
       setMnemonic(result.mnemonic)
       setStep("mnemonic")
-      // POST to backend
+      logUnlink("4. Mnemonic set, showing backup screen")
       try {
         await fetch("/api/wallet/connect", {
           method: "POST",
@@ -53,13 +139,15 @@ export function ConnectWallet() {
       } catch {
         // best-effort
       }
-    } catch {
+    } catch (err) {
+      logUnlink("ERROR in handleCreateWallet", err)
       toast.error("Failed to create wallet. Please try again.")
       setStep("landing")
     }
   }
 
   const handleImportWallet = async () => {
+    logUnlink("1. handleImportWallet called")
     if (!importMnemonic.trim()) {
       setImportError("Please enter your recovery phrase")
       return
@@ -72,19 +160,29 @@ export function ConnectWallet() {
     setImportError("")
     setStep("creating")
     try {
+      logUnlink("2. Calling importWallet()...")
       await importWallet(importMnemonic.trim())
+      logUnlink("3. importWallet SUCCESS")
+      setOnboardingComplete()
       toast.success("Wallet imported successfully")
-    } catch {
+    } catch (err) {
+      logUnlink("ERROR in handleImportWallet", err)
       toast.error("Invalid recovery phrase")
       setStep("importing")
     }
   }
 
   const handleCreateAccount = async () => {
+    logUnlink("1. handleCreateAccount called")
     setStep("creating-account")
     try {
+      logUnlink("2. Calling createAccount()...")
       await createAccount()
-    } catch {
+      logUnlink("3. createAccount SUCCESS")
+      setOnboardingComplete()
+      router.replace("/dashboard")
+    } catch (err) {
+      logUnlink("ERROR in handleCreateAccount", err)
       toast.error("Failed to create account")
       setStep("landing")
     }
@@ -381,7 +479,60 @@ export function ConnectWallet() {
                 <Download className="h-5 w-5" />
                 Import Existing Wallet
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  console.log("[NeoBank ConnectWallet] Connect MetaMask clicked")
+                  clearError()
+                  await connectMetaMask()
+                  console.log("[NeoBank ConnectWallet] connectMetaMask() returned")
+                }}
+                disabled={busy || (isConnecting && !isMetaMaskConnected)}
+                className={`w-full h-14 text-base font-medium gap-3 ${
+                  isMetaMaskConnected
+                    ? "border-primary/50 bg-primary/5 text-primary"
+                    : "border-border text-foreground hover:bg-secondary"
+                }`}
+                size="lg"
+              >
+                {isConnecting && !isMetaMaskConnected ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Connecting...
+                  </>
+                ) : isMetaMaskConnected ? (
+                  <>
+                    <Check className="h-5 w-5" />
+                    MetaMask Connected
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="h-5 w-5" />
+                    Connect MetaMask
+                  </>
+                )}
+              </Button>
             </div>
+            {isMetaMaskConnected ? (
+              <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
+                <p className="text-sm font-medium text-primary">
+                  MetaMask connected successfully
+                </p>
+                {publicAddress && (
+                  <p className="mt-0.5 font-mono text-xs text-muted-foreground">
+                    {shortenHex(publicAddress, 6)}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Next step: Create a new private wallet above to enter the app. You&apos;ll use MetaMask later to deposit funds.
+                </p>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs text-muted-foreground text-center">
+                Connect your existing wallet to prepare for deposits
+              </p>
+            )}
           </div>
 
           {/* Features */}
@@ -408,6 +559,11 @@ export function ConnectWallet() {
       {/* Footer */}
       <footer className="px-6 py-4 text-center text-xs text-muted-foreground border-t border-border">
         NeoBank Protocol v1.0 &middot; Powered by Unlink &middot; All transfers are private onchain
+        <span className="block mt-2">
+          <a href="/?reset=1" className="underline hover:text-foreground">
+            Start fresh / Clear all data
+          </a>
+        </span>
       </footer>
     </div>
   )

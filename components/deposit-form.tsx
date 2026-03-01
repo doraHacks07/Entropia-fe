@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useDeposit, shortenHex } from "@unlink-xyz/react"
+import { useDeposit, shortenHex, parseAmount } from "@unlink-xyz/react"
 import { useMetaMask } from "@/lib/wallet-context"
+import { WalletStatusBadge } from "@/components/wallet-status-badge"
 import {
   Card,
   CardContent,
@@ -34,6 +35,9 @@ export function DepositForm() {
     isConnecting,
     connectMetaMask,
     getEthereum,
+    isWrongNetwork,
+    switchToMonadTestnet,
+    error: metaMaskError,
   } = useMetaMask()
   const { deposit, isPending, reset: resetDeposit } = useDeposit()
 
@@ -71,11 +75,13 @@ export function DepositForm() {
     }
 
     try {
-      const decimals = 18
-      const parts = amount.split(".")
-      const whole = parts[0]
-      const frac = (parts[1] || "").padEnd(decimals, "0").slice(0, decimals)
-      const amountBigInt = BigInt(whole) * 10n ** BigInt(decimals) + BigInt(frac)
+      let amountBigInt: bigint
+      try {
+        amountBigInt = parseAmount(amount, 18)
+      } catch {
+        setError("Enter a valid amount")
+        return
+      }
 
       const depositResult = await deposit([
         {
@@ -247,6 +253,12 @@ export function DepositForm() {
               Connect your public wallet to deposit tokens into your private
               Unlink wallet.
             </p>
+            {metaMaskError && (
+              <div className="mt-3 flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2 text-sm text-destructive">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {metaMaskError}
+              </div>
+            )}
             <Button
               onClick={handleConnect}
               disabled={isConnecting}
@@ -270,6 +282,45 @@ export function DepositForm() {
     )
   }
 
+  if (isWrongNetwork) {
+    return (
+      <div className="mx-auto max-w-lg">
+        <div className="mb-6">
+          <div className="flex items-center gap-2">
+            <ArrowDownToLine className="h-6 w-6 text-primary" />
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Deposit
+            </h1>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Switch to Monad Testnet to deposit
+          </p>
+        </div>
+
+        <Card className="bg-card border-border">
+          <CardContent className="flex flex-col items-center py-10">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 mb-5">
+              <AlertCircle className="h-7 w-7 text-destructive" />
+            </div>
+            <h2 className="text-lg font-semibold text-card-foreground">
+              Wrong Network
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground text-center max-w-xs">
+              Please switch to Monad Testnet to deposit tokens into your private
+              wallet.
+            </p>
+            <Button
+              onClick={() => switchToMonadTestnet()}
+              className="mt-6 w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
+            >
+              Switch to Monad Testnet
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-lg">
       <div className="mb-6">
@@ -286,13 +337,7 @@ export function DepositForm() {
 
       <Card className="bg-card border-border">
         <CardContent className="pt-6 space-y-5">
-          <div className="rounded-lg bg-secondary/50 p-3 flex items-center gap-3">
-            <div className="h-2 w-2 rounded-full bg-primary" />
-            <span className="text-sm text-card-foreground font-mono">
-              {publicAddress ? shortenHex(publicAddress, 8) : ""}
-            </span>
-            <span className="text-xs text-muted-foreground">Connected</span>
-          </div>
+          <WalletStatusBadge />
 
           <div className="space-y-2">
             <Label

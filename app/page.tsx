@@ -1,27 +1,94 @@
 "use client"
 
-import { UnlinkProvider, useUnlink } from "@unlink-xyz/react"
-import { MetaMaskProvider } from "@/lib/wallet-context"
+import { Suspense, useEffect, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useUnlink } from "@unlink-xyz/react"
 import { ConnectWallet } from "@/components/connect-wallet"
-import { DashboardShell } from "@/components/dashboard-shell"
+import { isOnboardingComplete, clearOnboarding } from "@/lib/onboarding"
 
-function AppContent() {
-  const { ready, walletExists, activeAccount } = useUnlink()
+function LandingContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { ready, walletExists, activeAccount, clearWallet } = useUnlink()
+  const [mounted, setMounted] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
-  // Not ready or no wallet/account => onboarding
-  if (!ready || !walletExists || !activeAccount) {
-    return <ConnectWallet />
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const handleClearAll = async () => {
+    setClearing(true)
+    clearOnboarding()
+    await clearWallet()
+    setClearing(false)
+    window.location.href = "/"
   }
 
-  return <DashboardShell />
+  useEffect(() => {
+    if (!mounted) return
+    if (searchParams.get("reset") === "1" || searchParams.get("fresh") === "1") {
+      clearOnboarding()
+      clearWallet().then(() => {
+        window.location.href = "/"
+      })
+      return
+    }
+    if (ready && walletExists && activeAccount && isOnboardingComplete()) {
+      router.replace("/dashboard")
+    }
+  }, [mounted, ready, walletExists, activeAccount, searchParams, router])
+
+  if (mounted && (searchParams.get("reset") === "1" || searchParams.get("fresh") === "1")) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Clearing data...</p>
+      </div>
+    )
+  }
+
+  if (mounted && ready && walletExists && activeAccount && isOnboardingComplete()) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
+        <a href="/?reset=1" className="text-xs text-muted-foreground hover:text-foreground underline">
+          Not you? Start fresh
+        </a>
+      </div>
+    )
+  }
+
+  if (mounted && ready && walletExists && activeAccount && !isOnboardingComplete()) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 px-6">
+        <p className="text-sm text-muted-foreground text-center max-w-md">
+          We detected an existing wallet that wasn&apos;t set up through this app. Clear it to start fresh.
+        </p>
+        <button
+          onClick={handleClearAll}
+          disabled={clearing}
+          className="px-4 py-2 rounded-lg bg-destructive/10 text-destructive hover:bg-destructive/20 text-sm font-medium disabled:opacity-50"
+        >
+          {clearing ? "Clearing..." : "Clear wallet and start fresh"}
+        </button>
+        <a href="/?reset=1" className="text-xs text-muted-foreground hover:text-foreground underline">
+          Or visit /?reset=1 to force clear
+        </a>
+      </div>
+    )
+  }
+
+  return <ConnectWallet />
 }
 
 export default function Page() {
   return (
-    <UnlinkProvider chain="monad-testnet" autoSync>
-      <MetaMaskProvider>
-        <AppContent />
-      </MetaMaskProvider>
-    </UnlinkProvider>
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    }>
+      <LandingContent />
+    </Suspense>
   )
 }

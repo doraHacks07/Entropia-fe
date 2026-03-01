@@ -42,7 +42,7 @@ interface MobileHeaderProps {
 }
 
 export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
-  const { activeAccount, clearWallet } = useUnlink()
+  const { activeAccount } = useUnlink()
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -124,8 +124,8 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
               <Button
                 variant="ghost"
                 onClick={() => {
-                  clearWallet()
                   setOpen(false)
+                  window.location.href = "/?reset=1"
                 }}
                 className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
               >

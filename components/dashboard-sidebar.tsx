@@ -2,7 +2,10 @@
 
 import { useState } from "react"
 import { useUnlink, encodeAddress, shortenHex } from "@unlink-xyz/react"
+import { clearOnboarding } from "@/lib/onboarding"
 import { NeoBankLogo } from "@/components/neobank-logo"
+import { WalletStatusBadge } from "@/components/wallet-status-badge"
+import { useMetaMask } from "@/lib/wallet-context"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -51,7 +54,8 @@ export function DashboardSidebar({
   currentView,
   onViewChange,
 }: DashboardSidebarProps) {
-  const { activeAccount, clearWallet } = useUnlink()
+  const { activeAccount } = useUnlink()
+  const { isMetaMaskConnected } = useMetaMask()
   const [collapsed, setCollapsed] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -101,24 +105,27 @@ export function DashboardSidebar({
 
         {/* Wallet Info */}
         {!collapsed && (
-          <div className="mx-4 mb-4 rounded-lg border border-border bg-secondary/50 p-3">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              <span className="text-xs text-muted-foreground">
-                Private Wallet
-              </span>
+          <div className="mx-4 mb-4 space-y-3">
+            <div className="rounded-lg border border-border bg-secondary/50 p-3">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-primary" />
+                <span className="text-xs text-muted-foreground">
+                  Private Wallet
+                </span>
+              </div>
+              <button
+                onClick={copyAddress}
+                className="mt-1.5 flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-primary transition-colors"
+              >
+                {shortAddress}
+                {copied ? (
+                  <Check className="h-3 w-3 text-primary" />
+                ) : (
+                  <Copy className="h-3 w-3 text-muted-foreground" />
+                )}
+              </button>
             </div>
-            <button
-              onClick={copyAddress}
-              className="mt-1.5 flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-primary transition-colors"
-            >
-              {shortAddress}
-              {copied ? (
-                <Check className="h-3 w-3 text-primary" />
-              ) : (
-                <Copy className="h-3 w-3 text-muted-foreground" />
-              )}
-            </button>
+            {isMetaMaskConnected && <WalletStatusBadge />}
           </div>
         )}
 
@@ -168,23 +175,29 @@ export function DashboardSidebar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => clearWallet()}
+                  onClick={() => {
+                    clearOnboarding()
+                    window.location.href = "/?reset=1"
+                  }}
                   className="w-full text-muted-foreground hover:text-destructive"
                   aria-label="Clear wallet"
                 >
                   <LogOut className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Clear Wallet</TooltipContent>
+              <TooltipContent side="right">Clear Wallet & Start Fresh</TooltipContent>
             </Tooltip>
           ) : (
             <Button
               variant="ghost"
-              onClick={() => clearWallet()}
+              onClick={() => {
+                clearOnboarding()
+                window.location.href = "/?reset=1"
+              }}
               className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
             >
               <LogOut className="h-5 w-5" />
-              Clear Wallet
+              Clear Wallet & Start Fresh
             </Button>
           )}
         </div>
