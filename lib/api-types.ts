@@ -39,5 +39,8 @@ export interface SensitiveTransferRecord {
   amount: string
   relayId: string | null
   purpose?: string
+  privacyLevel?: "standard" | "enhanced" | "maximum"
+  encryptedMemo?: boolean
+  memo?: string
   timestamp: string
 }

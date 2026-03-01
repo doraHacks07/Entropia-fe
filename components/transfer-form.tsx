@@ -32,14 +32,21 @@ import {
   Layers,
 } from "lucide-react"
 
-type TransferStep = "form" | "confirm" | "success"
+type TransferStep = "details" | "review" | "confirm" | "success"
 
 interface TransferData {
   recipient: string
   amount: string
   token: string
+  gasSpeed: "slow" | "standard" | "fast"
   memo: string
 }
+
+const GAS_SPEED_OPTIONS = [
+  { value: "slow", label: "Slow", desc: "~2 min", fee: "Low" },
+  { value: "standard", label: "Standard", desc: "~30 sec", fee: "Normal" },
+  { value: "fast", label: "Fast", desc: "~10 sec", fee: "Higher" },
+] as const
 
 // Known tokens on Monad testnet (update with real addresses)
 const KNOWN_TOKENS = [
@@ -71,12 +78,13 @@ export function TransferForm() {
   const balances = rawBalances || {}
   const { send, isPending, isSuccess, reset: resetSend } = useSend()
 
-  const [step, setStep] = useState<TransferStep>("form")
+  const [step, setStep] = useState<TransferStep>("details")
   const [relayId, setRelayId] = useState<string | null>(null)
   const [form, setForm] = useState<TransferData>({
     recipient: "",
     amount: "",
     token: KNOWN_TOKENS[0].value,
+    gasSpeed: "standard",
     memo: "",
   })
   const [errors, setErrors] = useState<Partial<TransferData>>({})
@@ -107,8 +115,12 @@ export function TransferForm() {
 
   const handleReview = () => {
     if (validate()) {
-      setStep("confirm")
+      setStep("review")
     }
+  }
+
+  const handleConfirm = () => {
+    setStep("confirm")
   }
 
   const handleSubmit = async () => {
@@ -168,9 +180,10 @@ export function TransferForm() {
       recipient: "",
       amount: "",
       token: KNOWN_TOKENS[0].value,
+      gasSpeed: "standard",
       memo: "",
     })
-    setStep("form")
+    setStep("details")
     setRelayId(null)
     setErrors({})
     resetSend()
@@ -267,16 +280,19 @@ export function TransferForm() {
     )
   }
 
-  if (step === "confirm") {
+  if (step === "review") {
     return (
       <div className="mx-auto max-w-lg">
         <Card className="bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg text-card-foreground">
-              Confirm Private Transfer
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Step 2 of 3</span>
+              <CardTitle className="text-lg text-card-foreground">
+                Review Transfer
+              </CardTitle>
+            </div>
             <CardDescription>
-              Review the details before submitting
+              Verify all details before confirming
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -288,6 +304,7 @@ export function TransferForm() {
               />
               <Row label="Amount" value={form.amount} />
               <Row label="Token" value={shortenHex(form.token, 6)} mono />
+              <Row label="Gas Speed" value={GAS_SPEED_OPTIONS.find((g) => g.value === form.gasSpeed)?.label ?? form.gasSpeed} />
               <Row label="Available" value={formattedBalance} />
               {form.memo && <Row label="Memo" value={form.memo} />}
             </div>
@@ -298,7 +315,7 @@ export function TransferForm() {
                 <span className="text-sm font-medium text-card-foreground">Privacy Hops</span>
               </div>
               <div className="flex items-center gap-2">
-                {["Pay", "Hop 1", "Hop 2", "Hop 3", "Send"].map((label, i) => (
+                {["Pay", "Hop 1", "Hop 2", "Hop 3", "Transfer"].map((label, i) => (
                   <div key={label} className="flex items-center gap-2 flex-1">
                     <div className={`flex flex-col items-center gap-1 flex-1 ${i === 0 || i === 4 ? "" : ""}`}>
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-medium ${
@@ -332,7 +349,64 @@ export function TransferForm() {
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setStep("form")}
+                onClick={() => setStep("details")}
+                className="flex-1 border-border text-foreground hover:bg-secondary"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Continue to Confirm
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (step === "confirm") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Step 3 of 3</span>
+              <CardTitle className="text-lg text-card-foreground">
+                Confirm Transfer
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Final confirmation. This action will submit your private transfer.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
+              <Row
+                label="To"
+                value={`${form.recipient.slice(0, 12)}...${form.recipient.slice(-6)}`}
+                mono
+              />
+              <Row label="Amount" value={form.amount} />
+              <Row label="Token" value={shortenHex(form.token, 6)} mono />
+              <Row label="Gas Speed" value={GAS_SPEED_OPTIONS.find((g) => g.value === form.gasSpeed)?.label ?? form.gasSpeed} />
+              {form.memo && <Row label="Memo" value={form.memo} />}
+            </div>
+            <div className="flex items-start gap-2 rounded-lg bg-primary/5 border border-primary/20 p-3">
+              <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                This is a private transfer using zero-knowledge proofs. The
+                recipient, amount, and your balance remain hidden onchain. Proof
+                generation may take a few seconds.
+              </p>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep("review")}
                 className="flex-1 border-border text-foreground hover:bg-secondary"
               >
                 Back
@@ -350,7 +424,7 @@ export function TransferForm() {
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    Confirm & Send
+                    Confirm & Transfer
                   </>
                 )}
               </Button>
@@ -364,9 +438,12 @@ export function TransferForm() {
   return (
     <div className="mx-auto max-w-lg">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Private Send
-        </h1>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Step 1 of 3</span>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Transfer
+          </h1>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Transfer tokens privately to another Unlink address
         </p>
@@ -496,6 +573,30 @@ export function TransferForm() {
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* Gas Speed */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-card-foreground">
+              Gas Speed
+            </Label>
+            <Select
+              value={form.gasSpeed}
+              onValueChange={(v: "slow" | "standard" | "fast") =>
+                setForm({ ...form, gasSpeed: v })
+              }
+            >
+              <SelectTrigger className="h-12 bg-input border-border text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {GAS_SPEED_OPTIONS.map((g) => (
+                  <SelectItem key={g.value} value={g.value}>
+                    {g.label} — {g.desc} ({g.fee} fee)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Memo */}

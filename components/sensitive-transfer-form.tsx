@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import {
   ShieldAlert,
@@ -28,16 +30,28 @@ import {
   Info,
   ArrowUpRight,
   Lock,
+  Shield,
+  KeyRound,
 } from "lucide-react"
 
-type WithdrawStep = "form" | "confirm" | "success"
+type WithdrawStep = "details" | "passphrase" | "review" | "confirm" | "success"
 
 interface WithdrawData {
   recipient: string
   amount: string
   token: string
   purpose: string
+  privacyLevel: "standard" | "enhanced" | "maximum"
+  encryptedMemo: boolean
+  memo: string
+  passphrase: string
 }
+
+const PRIVACY_LEVELS = [
+  { value: "standard", label: "Standard", desc: "Basic privacy, faster processing" },
+  { value: "enhanced", label: "Enhanced", desc: "Additional obfuscation layers" },
+  { value: "maximum", label: "Maximum", desc: "Highest privacy, may take longer" },
+] as const
 
 const KNOWN_TOKENS = [
   { label: "Native Token", value: "0x0000000000000000000000000000000000000000" },
@@ -52,13 +66,17 @@ export function SensitiveTransferForm() {
     reset: resetWithdraw,
   } = useWithdraw()
 
-  const [step, setStep] = useState<WithdrawStep>("form")
+  const [step, setStep] = useState<WithdrawStep>("details")
   const [relayId, setRelayId] = useState<string | null>(null)
   const [form, setForm] = useState<WithdrawData>({
     recipient: "",
     amount: "",
     token: KNOWN_TOKENS[0].value,
     purpose: "",
+    privacyLevel: "standard",
+    encryptedMemo: false,
+    memo: "",
+    passphrase: "",
   })
   const [errors, setErrors] = useState<Partial<Record<keyof WithdrawData, string>>>({})
 
@@ -85,8 +103,28 @@ export function SensitiveTransferForm() {
     return Object.keys(newErrors).length === 0
   }
 
+  const needsPassphrase = form.encryptedMemo || form.privacyLevel === "enhanced" || form.privacyLevel === "maximum"
+
   const handleReview = () => {
-    if (validate()) setStep("confirm")
+    if (validate()) {
+      if (needsPassphrase) {
+        setStep("passphrase")
+      } else {
+        setStep("review")
+      }
+    }
+  }
+
+  const handleAfterPassphrase = () => {
+    if (form.passphrase.length >= 8) {
+      setStep("review")
+    } else {
+      toast.error("Passphrase must be at least 8 characters")
+    }
+  }
+
+  const handleConfirm = () => {
+    setStep("confirm")
   }
 
   const handleSubmit = async () => {
@@ -122,6 +160,9 @@ export function SensitiveTransferForm() {
             amount: form.amount,
             relayId: result.relayId,
             purpose: form.purpose,
+            privacyLevel: form.privacyLevel,
+            encryptedMemo: form.encryptedMemo,
+            memo: form.memo,
           }),
         })
         if (!res.ok) {
@@ -146,8 +187,12 @@ export function SensitiveTransferForm() {
       amount: "",
       token: KNOWN_TOKENS[0].value,
       purpose: "",
+      privacyLevel: "standard",
+      encryptedMemo: false,
+      memo: "",
+      passphrase: "",
     })
-    setStep("form")
+    setStep("details")
     setRelayId(null)
     setErrors({})
     resetWithdraw()
@@ -194,46 +239,147 @@ export function SensitiveTransferForm() {
     )
   }
 
-  if (step === "confirm") {
+  if (step === "passphrase") {
     return (
       <div className="mx-auto max-w-lg">
         <Card className="bg-card border-border">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <ShieldAlert className="h-5 w-5 text-primary" />
-              <CardTitle className="text-lg text-card-foreground">
-                Confirm Withdrawal
+              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Authentication</span>
+              <CardTitle className="text-lg text-card-foreground flex items-center gap-2">
+                <KeyRound className="h-5 w-5 text-primary" />
+                Passphrase Required
               </CardTitle>
             </div>
             <CardDescription>
-              Review carefully. This moves funds from your private wallet to a
-              public address.
+              Enter your passphrase to authenticate this sensitive transfer.
+              {form.encryptedMemo && " Your memo will be encrypted with this passphrase."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
-              <Row
-                label="To (Public)"
-                value={shortenHex(form.recipient, 8)}
-                mono
+            <div className="space-y-2">
+              <Label htmlFor="passphrase" className="text-sm font-medium text-card-foreground">
+                Passphrase
+              </Label>
+              <Input
+                id="passphrase"
+                type="password"
+                placeholder="Enter passphrase (min 8 characters)"
+                value={form.passphrase}
+                onChange={(e) => setForm({ ...form, passphrase: e.target.value })}
+                className="h-12 bg-input border-border font-mono"
               />
-              <Row label="Amount" value={form.amount} />
-              <Row label="Token" value={shortenHex(form.token, 6)} mono />
-              <Row label="Available" value={formattedBalance} />
-              {form.purpose && <Row label="Purpose" value={form.purpose} />}
-            </div>
-            <div className="flex items-start gap-2 rounded-lg bg-destructive/5 border border-destructive/20 p-3">
-              <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Withdrawals move tokens from your private shielded balance to a
-                public Ethereum address. The recipient address and amount will
-                be visible onchain. Once submitted, this cannot be reversed.
-              </p>
             </div>
             <div className="flex gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setStep("form")}
+                onClick={() => setStep("details")}
+                className="flex-1 border-border text-foreground hover:bg-secondary"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleAfterPassphrase}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Continue
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (step === "review") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Review</span>
+              <CardTitle className="text-lg text-card-foreground">
+                Review Sensitive Transfer
+              </CardTitle>
+            </div>
+            <CardDescription>
+              Verify all details before final confirmation
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
+              <Row label="To (Public)" value={shortenHex(form.recipient, 8)} mono />
+              <Row label="Amount" value={form.amount} />
+              <Row label="Token" value={shortenHex(form.token, 6)} mono />
+              <Row label="Privacy Level" value={PRIVACY_LEVELS.find((p) => p.value === form.privacyLevel)?.label ?? form.privacyLevel} />
+              <Row label="Available" value={formattedBalance} />
+              {form.purpose && <Row label="Purpose" value={form.purpose} />}
+              {form.memo && <Row label={form.encryptedMemo ? "Memo (encrypted)" : "Memo"} value={form.memo} />}
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep(needsPassphrase ? "passphrase" : "details")}
+                className="flex-1 border-border text-foreground hover:bg-secondary"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleConfirm}
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                Continue to Confirm
+                <ArrowUpRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (step === "confirm") {
+    return (
+      <div className="mx-auto max-w-lg">
+        <Card className="bg-card border-destructive/30">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+              <CardTitle className="text-lg text-destructive">
+                Final Confirmation — Sensitive Transfer
+              </CardTitle>
+            </div>
+            <CardDescription>
+              This is your last chance to cancel. Funds will move from private to public.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="rounded-lg bg-secondary/50 p-4 space-y-3">
+              <Row label="To (Public)" value={shortenHex(form.recipient, 8)} mono />
+              <Row label="Amount" value={form.amount} />
+              <Row label="Token" value={shortenHex(form.token, 6)} mono />
+              <Row label="Privacy Level" value={PRIVACY_LEVELS.find((p) => p.value === form.privacyLevel)?.label ?? form.privacyLevel} />
+              {form.memo && <Row label={form.encryptedMemo ? "Memo (encrypted)" : "Memo"} value={form.memo} />}
+            </div>
+            <div className="flex items-start gap-2 rounded-lg bg-destructive/10 border-2 border-destructive/40 p-4">
+              <AlertCircle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-destructive">
+                  Enhanced confirmation warnings
+                </p>
+                <ul className="text-xs text-muted-foreground leading-relaxed space-y-1 list-disc list-inside">
+                  <li>Withdrawals move tokens from your private shielded balance to a public Ethereum address</li>
+                  <li>The recipient address and amount will be visible onchain</li>
+                  <li>Once submitted, this action cannot be reversed</li>
+                  <li>Double-check the recipient address — sending to the wrong address may result in permanent loss</li>
+                </ul>
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setStep("review")}
                 className="flex-1 border-border text-foreground hover:bg-secondary"
               >
                 Back
@@ -241,7 +387,7 @@ export function SensitiveTransferForm() {
               <Button
                 onClick={handleSubmit}
                 disabled={isPending || busy}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {isPending ? (
                   <>
@@ -266,9 +412,10 @@ export function SensitiveTransferForm() {
     <div className="mx-auto max-w-lg">
       <div className="mb-6">
         <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">Step 1</span>
           <ShieldAlert className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Withdraw
+            Sensitive Transfer
           </h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -385,13 +532,62 @@ export function SensitiveTransferForm() {
             </div>
           </div>
 
+          {/* Privacy Level */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-card-foreground flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              Privacy Level
+            </Label>
+            <Select
+              value={form.privacyLevel}
+              onValueChange={(v: "standard" | "enhanced" | "maximum") =>
+                setForm({ ...form, privacyLevel: v })
+              }
+            >
+              <SelectTrigger className="h-12 bg-input border-border text-foreground">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                {PRIVACY_LEVELS.map((p) => (
+                  <SelectItem key={p.value} value={p.value}>
+                    {p.label} — {p.desc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Memo + Encrypted toggle */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium text-card-foreground">
+                Memo{" "}
+                <span className="text-muted-foreground font-normal">(optional)</span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="encrypted" className="text-xs text-muted-foreground">
+                  Encrypt memo
+                </Label>
+                <Switch
+                  id="encrypted"
+                  checked={form.encryptedMemo}
+                  onCheckedChange={(v) => setForm({ ...form, encryptedMemo: v })}
+                />
+              </div>
+            </div>
+            <Textarea
+              placeholder="Add a note (encrypted if toggle is on)..."
+              value={form.memo}
+              onChange={(e) => setForm({ ...form, memo: e.target.value })}
+              className="min-h-[70px] bg-input border-border resize-none"
+            />
+          </div>
+
           {/* Purpose */}
           <div className="space-y-2">
             <Label className="text-sm font-medium text-card-foreground">
               Purpose{" "}
-              <span className="text-muted-foreground font-normal">
-                (optional)
-              </span>
+              <span className="text-muted-foreground font-normal">(optional)</span>
             </Label>
             <Select
               value={form.purpose}

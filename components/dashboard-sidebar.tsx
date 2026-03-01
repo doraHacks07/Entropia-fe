@@ -43,7 +43,7 @@ const navItems: {
 }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "deposit", label: "Deposit", icon: ArrowDownToLine },
-  { id: "transfer", label: "Send", icon: ArrowUpDown },
+  { id: "transfer", label: "Transfer", icon: ArrowUpDown },
   { id: "sensitive", label: "Withdraw", icon: ShieldAlert },
   { id: "history", label: "History", icon: Clock },
   { id: "architecture", label: "Architecture", icon: GitBranch },

@@ -19,7 +19,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { type, token, recipient, amount, relayId, purpose } = body
+    const { type, token, recipient, amount, relayId, purpose, privacyLevel, encryptedMemo, memo } = body
 
     if (!token) {
       return NextResponse.json(
@@ -47,6 +47,9 @@ export async function POST(request: NextRequest) {
       amount: String(amount),
       relayId: relayId ?? null,
       purpose: purpose ?? undefined,
+      privacyLevel: privacyLevel ?? undefined,
+      encryptedMemo: encryptedMemo ?? undefined,
+      memo: memo ?? undefined,
     })
 
     return NextResponse.json({
