@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, shortenHex } from "@unlink-xyz/react"
+import { useUnlink } from "@unlink-xyz/react"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -18,7 +18,7 @@ import {
   Copy,
   Check,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, truncateAddress } from "@/lib/utils"
 
 type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
 
@@ -47,7 +47,7 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
   const [copied, setCopied] = useState(false)
 
   const zkAddress = activeAccount?.address ?? ""
-  const truncated = zkAddress ? shortenHex(zkAddress, 6) : "Loading..."
+  const truncated = zkAddress ? truncateAddress(zkAddress, 14, 8) : "Loading..."
 
   const copyAddress = () => {
     if (zkAddress) {

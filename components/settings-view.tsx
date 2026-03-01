@@ -2,6 +2,7 @@
 
 import { useUnlink, shortenHex, formatAmount } from "@unlink-xyz/react"
 import { clearOnboarding } from "@/lib/onboarding"
+import { truncateAddress } from "@/lib/utils"
 import { useMetaMask } from "@/lib/wallet-context"
 import {
   Card,
@@ -72,7 +73,7 @@ export function SettingsView() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl min-w-0 overflow-hidden">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Settings
@@ -83,7 +84,7 @@ export function SettingsView() {
       </div>
 
       {/* Private Wallet Info */}
-      <Card className="bg-card border-border">
+      <Card className="bg-card border-border overflow-hidden">
         <CardHeader>
           <CardTitle className="text-base text-card-foreground">
             Private Wallet
@@ -91,20 +92,20 @@ export function SettingsView() {
           <CardDescription>Your Unlink shielded wallet details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-secondary/50 p-4">
-            <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary/50 p-4 min-w-0 overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <p className="text-xs text-muted-foreground mb-1">
                 Unlink Address
               </p>
-              <p className="font-mono text-sm text-card-foreground truncate">
-                {zkAddress}
+              <p className="font-mono text-sm text-card-foreground truncate" title={zkAddress}>
+                {zkAddress ? truncateAddress(zkAddress, 12, 6) : "—"}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={copyAddress}
-              className="shrink-0 text-muted-foreground hover:text-foreground"
+              className="shrink-0 h-9 w-9 text-muted-foreground hover:text-foreground"
             >
               {copied ? (
                 <Check className="h-4 w-4 text-primary" />
@@ -172,7 +173,7 @@ export function SettingsView() {
       </Card>
 
       {/* Accounts */}
-      <Card className="bg-card border-border">
+      <Card className="bg-card border-border overflow-hidden">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-primary" />
@@ -185,21 +186,24 @@ export function SettingsView() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {accounts?.map((acct, i) => (
+          {accounts?.map((acct, i) => {
+            const addr = (acct as unknown as { address?: string }).address || `0x${"0".repeat(8)}account${i}`
+            const displayAddr = addr.startsWith("unlink1") ? truncateAddress(addr, 12, 6) : shortenHex(addr, 6)
+            return (
             <div
               key={i}
-              className={`flex items-center justify-between rounded-lg px-4 py-3 transition-colors ${
+              className={`flex items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors min-w-0 ${
                 i === activeAccountIndex
                   ? "bg-primary/10 border border-primary/30"
                   : "bg-secondary/50 hover:bg-secondary"
               }`}
             >
-              <div>
-                <p className="text-sm font-medium text-card-foreground">
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <p className="text-sm font-medium text-card-foreground truncate">
                   Account #{i + 1}
                 </p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  {shortenHex((acct as unknown as { address?: string }).address || `0x${"0".repeat(8)}account${i}`, 8)}
+                <p className="text-xs text-muted-foreground font-mono truncate block" title={addr}>
+                  {displayAddr}
                 </p>
               </div>
               {i === activeAccountIndex ? (
@@ -212,13 +216,13 @@ export function SettingsView() {
                   size="sm"
                   onClick={() => switchAccount(i)}
                   disabled={busy}
-                  className="border-border text-muted-foreground hover:text-foreground"
+                  className="shrink-0 border-border text-muted-foreground hover:text-foreground"
                 >
                   Switch
                 </Button>
               )}
             </div>
-          ))}
+          )})}
           <Button
             variant="outline"
             onClick={handleCreateAccount}

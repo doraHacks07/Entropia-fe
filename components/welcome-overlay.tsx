@@ -1,6 +1,7 @@
 "use client"
 
-import { useUnlink, shortenHex } from "@unlink-xyz/react"
+import { useUnlink } from "@unlink-xyz/react"
+import { truncateAddress } from "@/lib/utils"
 import { setWelcomeSeen } from "@/lib/onboarding"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { Button } from "@/components/ui/button"
@@ -53,7 +54,7 @@ export function WelcomeOverlay({ onDismiss }: WelcomeOverlayProps) {
             </p>
             <div className="flex items-center justify-between gap-2">
               <code className="text-sm font-mono text-foreground truncate flex-1 text-left">
-                {zkAddress ? shortenHex(zkAddress, 8) : "Loading..."}
+                {zkAddress ? truncateAddress(zkAddress, 14, 8) : "Loading..."}
               </code>
               <Button
                 variant="ghost"

@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useUnlink, shortenHex } from "@unlink-xyz/react"
+import { useUnlink } from "@unlink-xyz/react"
 import { clearOnboarding } from "@/lib/onboarding"
 import { NeoBankLogo } from "@/components/neobank-logo"
 import { WalletStatusBadge } from "@/components/wallet-status-badge"
 import { useMetaMask } from "@/lib/wallet-context"
-import { cn } from "@/lib/utils"
+import { cn, truncateAddress } from "@/lib/utils"
 import {
   LayoutDashboard,
   ArrowUpDown,
@@ -60,7 +60,7 @@ export function DashboardSidebar({
   const [copied, setCopied] = useState(false)
 
   const zkAddress = activeAccount?.address ?? ""
-  const shortAddress = zkAddress ? shortenHex(zkAddress, 6) : "Loading..."
+  const shortAddress = zkAddress ? truncateAddress(zkAddress, 12, 6) : "Loading..."
 
   const copyAddress = () => {
     if (zkAddress) {
@@ -74,7 +74,7 @@ export function DashboardSidebar({
     <TooltipProvider delayDuration={0}>
       <aside
         className={cn(
-          "flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300",
+          "flex h-screen flex-col border-r border-border bg-sidebar transition-all duration-300 overflow-hidden",
           collapsed ? "w-[72px]" : "w-64"
         )}
       >
@@ -98,25 +98,30 @@ export function DashboardSidebar({
 
         {/* Wallet Info */}
         {!collapsed && (
-          <div className="mx-4 mb-4 space-y-3">
-            <div className="rounded-lg border border-border bg-secondary/50 p-3">
+          <div className="mx-4 mb-4 space-y-3 min-w-0 overflow-hidden">
+            <div className="rounded-lg border border-border bg-secondary/50 p-3 min-w-0 overflow-hidden">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-primary" />
-                <span className="text-xs text-muted-foreground">
+                <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                <span className="text-xs text-muted-foreground truncate">
                   Private Wallet
                 </span>
               </div>
-              <button
-                onClick={copyAddress}
-                className="mt-1.5 flex items-center gap-1.5 text-sm font-mono text-foreground hover:text-primary transition-colors"
-              >
-                {shortAddress}
-                {copied ? (
-                  <Check className="h-3 w-3 text-primary" />
-                ) : (
-                  <Copy className="h-3 w-3 text-muted-foreground" />
-                )}
-              </button>
+              <div className="mt-1.5 flex items-center gap-2 min-w-0">
+                <span className="flex-1 min-w-0 truncate text-sm font-mono text-foreground">
+                  {shortAddress}
+                </span>
+                <button
+                  onClick={copyAddress}
+                  className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-secondary/50 transition-colors"
+                  aria-label="Copy address"
+                >
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
             {isMetaMaskConnected && <WalletStatusBadge />}
           </div>
