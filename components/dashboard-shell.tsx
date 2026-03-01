@@ -10,11 +10,12 @@ import { BackendPaymentForm } from "@/components/backend-payment-form"
 import { SensitiveTransferForm } from "@/components/sensitive-transfer-form"
 import { TransactionHistory } from "@/components/transaction-history"
 import { SettingsView } from "@/components/settings-view"
-import { ArchitectureFlow } from "@/components/architecture-flow"
+// import { ArchitectureFlow } from "@/components/architecture-flow"
+import { TransferSimulation } from "@/components/transfer-simulation"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useBackendPaymentFlow } from "@/lib/backend-payments"
 
-type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
+type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "simulation" | "settings"
 
 export function DashboardShell() {
   const [currentView, setCurrentView] = useState<View>("dashboard")
@@ -46,7 +47,10 @@ export function DashboardShell() {
             {currentView === "transfer" && (backendPaymentFlow ? <BackendPaymentForm /> : <TransferForm />)}
             {currentView === "sensitive" && <SensitiveTransferForm />}
             {currentView === "history" && <TransactionHistory />}
+            {/* Architecture - commented out for production
             {currentView === "architecture" && <ArchitectureFlow />}
+            */}
+            {currentView === "simulation" && <TransferSimulation />}
             {currentView === "settings" && <SettingsView />}
           </main>
         </ScrollArea>

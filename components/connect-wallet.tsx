@@ -28,11 +28,8 @@ import { toast } from "sonner"
 
 type OnboardStep = "landing" | "creating" | "mnemonic" | "importing" | "creating-account"
 
-const DEBUG_UNLINK = true
-function logUnlink(step: string, data?: object) {
-  if (DEBUG_UNLINK) {
-    console.log(`[NeoBank Unlink] ${step}`, data ?? "")
-  }
+function logUnlink(_step: string, _data?: object) {
+  // Debug logging disabled for production
 }
 
 export function ConnectWallet() {
@@ -61,7 +58,6 @@ export function ConnectWallet() {
 
   useEffect(() => {
     if (error) {
-      console.log("[NeoBank ConnectWallet] Error from MetaMask:", error)
       toast.error(error)
     }
   }, [error])
@@ -70,37 +66,12 @@ export function ConnectWallet() {
   useEffect(() => {
     if (isMetaMaskConnected && publicAddress && !hasShownConnectToast.current) {
       hasShownConnectToast.current = true
-      console.log("[NeoBank ConnectWallet] MetaMask connected successfully", {
-        address: publicAddress.slice(0, 10) + "...",
-      })
-      toast.success("MetaMask connected! Now create a private wallet to continue.")
+      toast.success("MetaMask connected. Create a private wallet to continue.")
     }
     if (!isMetaMaskConnected) hasShownConnectToast.current = false
   }, [isMetaMaskConnected, publicAddress])
 
-  useEffect(() => {
-    if (!DEBUG_UNLINK) return
-    logUnlink("State update:", {
-      ready,
-      walletExists,
-      hasActiveAccount: !!activeAccount,
-      activeAccountIndex,
-      accountsCount: accounts?.length ?? 0,
-      chainId,
-      busy,
-      status: status || "(none)",
-    })
-    if (ready && walletExists && activeAccount) {
-      const zkAddress = activeAccount?.address ?? null
-      console.log("[NeoBank Unlink] CONNECTED - Full details:", {
-        zkAddress,
-        zkAddressShort: zkAddress ? shortenHex(zkAddress, 6) : null,
-        activeAccountIndex,
-        accountsCount: accounts?.length,
-        chainId,
-      })
-    }
-  }, [ready, walletExists, activeAccount, accounts, activeAccountIndex, chainId, busy, status])
+  // Wallet state: ready when wallet exists and active account is set
 
   const [step, setStep] = useState<OnboardStep>("landing")
   const [mnemonic, setMnemonic] = useState("")
@@ -477,10 +448,8 @@ export function ConnectWallet() {
               <Button
                 variant="outline"
                 onClick={async () => {
-                  console.log("[NeoBank ConnectWallet] Connect MetaMask clicked")
                   clearError()
                   await connectMetaMask()
-                  console.log("[NeoBank ConnectWallet] connectMetaMask() returned")
                 }}
                 disabled={busy || (isConnecting && !isMetaMaskConnected)}
                 className={`w-full h-14 text-base font-medium gap-3 ${

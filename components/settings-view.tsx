@@ -15,19 +15,15 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Copy, Check, Shield, Bell, Globe, Key, Users, Download, RefreshCw, LogOut } from "lucide-react"
+import { Copy, Check, Shield, Bell, Globe, Key, Download, RefreshCw, LogOut } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 
 export function SettingsView() {
   const {
     activeAccount,
-    activeAccountIndex,
-    accounts,
     chainId,
     exportMnemonic,
-    createAccount,
-    switchAccount,
     busy,
   } = useUnlink()
   const {
@@ -49,6 +45,7 @@ export function SettingsView() {
     if (zkAddress) {
       navigator.clipboard.writeText(zkAddress)
       setCopied(true)
+      toast.success("Address copied")
       setTimeout(() => setCopied(false), 2000)
     }
   }
@@ -63,49 +60,42 @@ export function SettingsView() {
     }
   }
 
-  const handleCreateAccount = async () => {
-    try {
-      await createAccount()
-      toast.success("New account created")
-    } catch {
-      toast.error("Failed to create account")
-    }
-  }
-
   return (
-    <div className="space-y-6 max-w-2xl min-w-0 overflow-hidden">
+    <div className="space-y-8 max-w-2xl min-w-0 overflow-hidden">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
           Settings
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Manage your wallet, accounts, and privacy preferences
         </p>
       </div>
 
-      {/* Private Wallet Info */}
-      <Card className="bg-card border-border overflow-hidden">
-        <CardHeader>
-          <CardTitle className="text-base text-card-foreground">
+      {/* Private Wallet */}
+      <Card className="bg-card/80 border-border/80 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Private Wallet
           </CardTitle>
-          <CardDescription>Your Unlink shielded wallet details</CardDescription>
+          <CardDescription className="text-muted-foreground">
+            Your Unlink shielded wallet details
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between gap-3 rounded-lg bg-secondary/50 p-4 min-w-0 overflow-hidden">
+        <CardContent className="space-y-5">
+          <div className="flex items-center justify-between gap-4 rounded-xl bg-muted/40 p-4 min-w-0 border border-border/50">
             <div className="min-w-0 flex-1 overflow-hidden">
-              <p className="text-xs text-muted-foreground mb-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
                 Unlink Address
               </p>
-              <p className="font-mono text-sm text-card-foreground truncate" title={zkAddress}>
-                {zkAddress ? truncateAddress(zkAddress, 12, 6) : "—"}
+              <p className="font-mono text-sm text-foreground truncate" title={zkAddress}>
+                {zkAddress ? truncateAddress(zkAddress, 14, 8) : "—"}
               </p>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={copyAddress}
-              className="shrink-0 h-9 w-9 text-muted-foreground hover:text-foreground"
+              className="shrink-0 h-10 w-10 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               {copied ? (
                 <Check className="h-4 w-4 text-primary" />
@@ -114,38 +104,35 @@ export function SettingsView() {
               )}
             </Button>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Chain ID</span>
-            <Badge variant="outline" className="border-primary/30 text-primary">
-              {chainId || "Monad Testnet"}
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Status</span>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              <span className="text-sm text-card-foreground">Active</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="rounded-lg bg-muted/30 px-4 py-3 border border-border/50">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Network</p>
+              <p className="text-sm font-medium text-foreground">{chainId ? `Chain ${chainId}` : "Monad Testnet"}</p>
+            </div>
+            <div className="rounded-lg bg-muted/30 px-4 py-3 border border-border/50">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="text-sm font-medium text-foreground">Connected</span>
+              </div>
             </div>
           </div>
           {isMetaMaskConnected && publicAddress && (
-            <div className="space-y-3 rounded-lg border border-border bg-secondary/30 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  MetaMask (Deposits)
-                </span>
-                <span className="text-sm font-mono text-card-foreground">
-                  {shortenHex(publicAddress, 6)}
-                </span>
-              </div>
-              {balance !== null && (
+            <div className="space-y-4 rounded-xl border border-border bg-muted/20 p-5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">MetaMask (Deposits)</p>
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Balance</span>
-                  <span className="text-sm text-card-foreground">
-                    {formatAmount(balance, 18)} MON
-                  </span>
+                  <span className="text-sm text-muted-foreground">Address</span>
+                  <span className="text-sm font-mono text-foreground">{shortenHex(publicAddress, 8)}</span>
                 </div>
-              )}
-              <div className="flex gap-2 pt-2">
+                {balance !== null && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Balance</span>
+                    <span className="text-sm font-semibold text-foreground">{formatAmount(balance, 18)} MON</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
                 {isWrongNetwork && (
                   <Button
                     variant="outline"
@@ -153,18 +140,18 @@ export function SettingsView() {
                     onClick={() => switchToMonadTestnet()}
                     className="border-border text-foreground gap-2"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    Switch to Monad Testnet
+                    <RefreshCw className="h-3.5 w-3.5" />
+                    Switch Network
                   </Button>
                 )}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => disconnectMetaMask()}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10 gap-2"
+                  className="border-border/80 text-muted-foreground hover:text-destructive hover:border-destructive/50 gap-2"
                 >
-                  <LogOut className="h-4 w-4" />
-                  Disconnect MetaMask
+                  <LogOut className="h-3.5 w-3.5" />
+                  Disconnect
                 </Button>
               </div>
             </div>
@@ -172,93 +159,29 @@ export function SettingsView() {
         </CardContent>
       </Card>
 
-      {/* Accounts */}
-      <Card className="bg-card border-border overflow-hidden">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base text-card-foreground">
-              Accounts
-            </CardTitle>
-          </div>
-          <CardDescription>
-            Manage multiple private accounts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {accounts?.map((acct, i) => {
-            const addr = (acct as unknown as { address?: string }).address || `0x${"0".repeat(8)}account${i}`
-            const displayAddr = addr.startsWith("unlink1") ? truncateAddress(addr, 12, 6) : shortenHex(addr, 6)
-            return (
-            <div
-              key={i}
-              className={`flex items-center justify-between gap-3 rounded-lg px-4 py-3 transition-colors min-w-0 ${
-                i === activeAccountIndex
-                  ? "bg-primary/10 border border-primary/30"
-                  : "bg-secondary/50 hover:bg-secondary"
-              }`}
-            >
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <p className="text-sm font-medium text-card-foreground truncate">
-                  Account #{i + 1}
-                </p>
-                <p className="text-xs text-muted-foreground font-mono truncate block" title={addr}>
-                  {displayAddr}
-                </p>
-              </div>
-              {i === activeAccountIndex ? (
-                <Badge className="bg-primary/10 text-primary hover:bg-primary/10 text-xs">
-                  Active
-                </Badge>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => switchAccount(i)}
-                  disabled={busy}
-                  className="shrink-0 border-border text-muted-foreground hover:text-foreground"
-                >
-                  Switch
-                </Button>
-              )}
-            </div>
-          )})}
-          <Button
-            variant="outline"
-            onClick={handleCreateAccount}
-            disabled={busy}
-            className="w-full border-border text-muted-foreground hover:text-foreground"
-          >
-            Create New Account
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Accounts hidden - Havala architecture: accounts managed via intermediaries, not user-created */}
 
-      {/* Backup */}
-      <Card className="bg-card border-border">
-        <CardHeader>
+      {/* Backup & Recovery */}
+      <Card className="bg-card/80 border-border/80 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
-            <Key className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base text-card-foreground">
-              Backup & Recovery
-            </CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+              <Key className="h-4 w-4 text-primary" />
+            </div>
+            <CardTitle className="text-lg font-semibold text-foreground">Backup & Recovery</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent>
           {showingMnemonic && mnemonic ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="grid grid-cols-3 gap-2">
                 {mnemonic.split(" ").map((word, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-2"
+                    className="flex items-center gap-2 rounded-lg bg-muted/50 px-3 py-2.5 border border-border/50"
                   >
-                    <span className="text-xs text-muted-foreground w-5 text-right">
-                      {i + 1}.
-                    </span>
-                    <span className="text-xs font-mono text-card-foreground">
-                      {word}
-                    </span>
+                    <span className="text-xs text-muted-foreground w-5 text-right">{i + 1}.</span>
+                    <span className="text-xs font-mono text-foreground">{word}</span>
                   </div>
                 ))}
               </div>
@@ -268,7 +191,7 @@ export function SettingsView() {
                   setShowingMnemonic(false)
                   setMnemonic("")
                 }}
-                className="w-full border-border text-muted-foreground"
+                className="w-full border-border"
               >
                 Hide Recovery Phrase
               </Button>
@@ -278,7 +201,7 @@ export function SettingsView() {
               variant="outline"
               onClick={handleExportMnemonic}
               disabled={busy}
-              className="w-full border-border text-muted-foreground hover:text-foreground gap-2"
+              className="w-full h-11 border-border gap-2 hover:bg-muted/50"
             >
               <Download className="h-4 w-4" />
               Export Recovery Phrase
@@ -287,65 +210,61 @@ export function SettingsView() {
         </CardContent>
       </Card>
 
-      {/* Privacy Settings */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Shield className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base text-card-foreground">
-              Privacy
-            </CardTitle>
-          </div>
-          <CardDescription>
-            Control your onchain privacy settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <SettingToggle
-            label="Auto-sync balances"
-            description="Automatically sync private balances in the background"
-            defaultChecked={true}
-          />
-          <SettingToggle
-            label="Hide balance on dashboard"
-            description="Mask your balance for screen sharing"
-            defaultChecked={false}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Notifications */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Bell className="h-4 w-4 text-primary" />
-            <CardTitle className="text-base text-card-foreground">
-              Notifications
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <SettingToggle
-            label="Transaction confirmations"
-            description="Get notified when transactions are confirmed"
-            defaultChecked={true}
-          />
-          <SettingToggle
-            label="Incoming deposits"
-            description="Alert when tokens are deposited"
-            defaultChecked={true}
-          />
-        </CardContent>
-      </Card>
+      {/* Privacy & Notifications - Combined */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        <Card className="bg-card/80 border-border/80 backdrop-blur-sm overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <Shield className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground">Privacy</CardTitle>
+                <CardDescription className="text-muted-foreground text-xs">
+                  Onchain privacy settings
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0">
+            <SettingToggle label="Auto-sync balances" description="Sync balances in background" defaultChecked={true} />
+            <SettingToggle label="Hide balance" description="Mask for screen sharing" defaultChecked={false} />
+          </CardContent>
+        </Card>
+        <Card className="bg-card/80 border-border/80 backdrop-blur-sm overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                <Bell className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-semibold text-foreground">Notifications</CardTitle>
+                <CardDescription className="text-muted-foreground text-xs">
+                  Transaction alerts
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-0">
+            <SettingToggle label="Confirmations" description="When tx confirms" defaultChecked={true} />
+            <SettingToggle label="Incoming deposits" description="New deposit alerts" defaultChecked={true} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Danger Zone */}
-      <Card className="bg-card border-destructive/30">
-        <CardHeader>
+      <Card className="bg-card/80 border-destructive/20 overflow-hidden">
+        <CardHeader className="pb-4">
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-destructive" />
-            <CardTitle className="text-base text-destructive">
-              Danger Zone
-            </CardTitle>
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-destructive/10">
+              <Globe className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <CardTitle className="text-base font-semibold text-destructive">Danger Zone</CardTitle>
+              <CardDescription className="text-muted-foreground text-xs">
+                Irreversible actions
+              </CardDescription>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -355,12 +274,12 @@ export function SettingsView() {
               clearOnboarding()
               window.location.href = "/?reset=1"
             }}
-            className="w-full"
+            className="w-full h-11"
           >
             Clear Wallet & Start Fresh
           </Button>
-          <p className="mt-2 text-xs text-muted-foreground text-center">
-            Make sure you have backed up your recovery phrase before clearing.
+          <p className="mt-3 text-xs text-muted-foreground text-center leading-relaxed">
+            Back up your recovery phrase first. This cannot be undone.
           </p>
         </CardContent>
       </Card>
@@ -379,17 +298,15 @@ function SettingToggle({
 }) {
   const [checked, setChecked] = useState(defaultChecked)
   return (
-    <div className="flex items-center justify-between">
-      <div className="space-y-0.5">
-        <Label className="text-sm font-medium text-card-foreground">
-          {label}
-        </Label>
-        <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-border/50 bg-muted/20 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <Label className="text-sm font-medium text-foreground">{label}</Label>
+        <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
       </div>
       <Switch
         checked={checked}
         onCheckedChange={setChecked}
-        className="data-[state=checked]:bg-primary"
+        className="shrink-0 data-[state=checked]:bg-primary"
       />
     </div>
   )

@@ -12,11 +12,8 @@ import {
 const MONAD_TESTNET_CHAIN_ID = 10143
 const MONAD_TESTNET_RPC = "https://testnet-rpc.monad.xyz"
 
-const DEBUG = true
-function log(step: string, data?: object) {
-  if (DEBUG) {
-    console.log(`[NeoBank MetaMask] ${step}`, data ?? "")
-  }
+function log(_step: string, _data?: object) {
+  // Debug logging disabled for production
 }
 
 /**

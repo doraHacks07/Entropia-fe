@@ -13,9 +13,14 @@ const inter = Inter({
 const _geistMono = Geist_Mono({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'NeoBank - Onchain Self-Custodial Bank',
-  description: 'Your financial life, private and onchain. Self-custodial banking with full privacy.',
-  generator: 'v0.app',
+  title: 'NeoBank — Private Self-Custodial Banking',
+  description: 'Your financial life, private and onchain. Self-custodial banking with ZK privacy. Deposit, transfer, and withdraw with full control.',
+  keywords: ['NeoBank', 'privacy', 'self-custodial', 'banking', 'crypto', 'ZK', 'Unlink'],
+  openGraph: {
+    title: 'NeoBank — Private Self-Custodial Banking',
+    description: 'Your financial life, private and onchain. Self-custodial banking with ZK privacy.',
+    type: 'website',
+  },
   icons: {
     icon: [
       {
@@ -37,7 +42,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#0d0f1a',
-  userScalable: false,
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

@@ -72,7 +72,7 @@ function LandingContent() {
           {clearing ? "Clearing..." : "Clear wallet and start fresh"}
         </button>
         <a href="/?reset=1" className="text-xs text-muted-foreground hover:text-foreground underline">
-          Or visit /?reset=1 to force clear
+          Force sign out
         </a>
       </div>
     )

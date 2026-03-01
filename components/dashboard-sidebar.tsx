@@ -19,7 +19,7 @@ import {
   Copy,
   Check,
   ArrowDownToLine,
-  GitBranch,
+  Play,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -29,7 +29,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
-type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
+type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "simulation" | "settings"
 
 interface DashboardSidebarProps {
   currentView: View
@@ -46,7 +46,8 @@ const navItems: {
   { id: "transfer", label: "Transfer", icon: ArrowUpDown },
   { id: "sensitive", label: "Withdraw", icon: ShieldAlert },
   { id: "history", label: "History", icon: Clock },
-  { id: "architecture", label: "Architecture", icon: GitBranch },
+  // { id: "architecture", label: "Architecture", icon: GitBranch }, // commented out for production
+  { id: "simulation", label: "How it works", icon: Play },
   { id: "settings", label: "Settings", icon: Settings },
 ]
 
@@ -183,7 +184,7 @@ export function DashboardSidebar({
                   <LogOut className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="right">Clear Wallet & Start Fresh</TooltipContent>
+              <TooltipContent side="right">Sign out</TooltipContent>
             </Tooltip>
           ) : (
             <Button
@@ -195,7 +196,7 @@ export function DashboardSidebar({
               className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
             >
               <LogOut className="h-5 w-5" />
-              Clear Wallet & Start Fresh
+              Sign out
             </Button>
           )}
         </div>

@@ -12,7 +12,7 @@ import {
   ShieldAlert,
   ArrowDownToLine,
   Clock,
-  GitBranch,
+  Play,
   Settings,
   LogOut,
   Copy,
@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 import { cn, truncateAddress } from "@/lib/utils"
 
-type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
+type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "simulation" | "settings"
 
 const navItems: {
   id: View
@@ -32,7 +32,8 @@ const navItems: {
   { id: "transfer", label: "Transfer", icon: ArrowUpDown },
   { id: "sensitive", label: "Withdraw", icon: ShieldAlert },
   { id: "history", label: "History", icon: Clock },
-  { id: "architecture", label: "Architecture", icon: GitBranch },
+  // { id: "architecture", label: "Architecture", icon: GitBranch }, // commented out for production
+  { id: "simulation", label: "How it works", icon: Play },
   { id: "settings", label: "Settings", icon: Settings },
 ]
 
@@ -123,7 +124,7 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
                 className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
               >
                 <LogOut className="h-5 w-5" />
-                Clear Wallet
+                Sign out
               </Button>
             </div>
           </div>

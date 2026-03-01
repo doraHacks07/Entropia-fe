@@ -78,6 +78,7 @@ export function TransferForm() {
   const balances = rawBalances || {}
   const { send, isPending, isSuccess, reset: resetSend } = useSend()
 
+  const [transferMode, setTransferMode] = useState<"standard" | "sensitive">("standard")
   const [step, setStep] = useState<TransferStep>("details")
   const [relayId, setRelayId] = useState<string | null>(null)
   const [form, setForm] = useState<TransferData>({
@@ -447,6 +448,32 @@ export function TransferForm() {
         <p className="mt-1 text-sm text-muted-foreground">
           Transfer tokens privately to another Unlink address
         </p>
+      </div>
+
+      {/* Mode: Standard vs Sensitive Transfer */}
+      <div className="mb-6 flex gap-2 p-1 rounded-lg bg-muted/50 border border-border w-fit">
+        <button
+          type="button"
+          onClick={() => setTransferMode("standard")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            transferMode === "standard"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Standard Transfer
+        </button>
+        <button
+          type="button"
+          onClick={() => setTransferMode("sensitive")}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            transferMode === "sensitive"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Sensitive Transfer
+        </button>
       </div>
 
       <Card className="bg-card border-border">
