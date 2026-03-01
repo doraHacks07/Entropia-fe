@@ -14,7 +14,7 @@ function UnlinkAwareMetaMaskProvider({ children }: { children: React.ReactNode }
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <UnlinkProvider chain="monad-testnet" autoSync>
+    <UnlinkProvider chain="monad-testnet" autoSync={false}>
       <UnlinkAwareMetaMaskProvider>{children}</UnlinkAwareMetaMaskProvider>
     </UnlinkProvider>
   )
