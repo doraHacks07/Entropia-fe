@@ -16,7 +16,7 @@ function UnlinkAwareMetaMaskProvider({ children }: { children: React.ReactNode }
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <UnlinkProvider chain="monad-testnet" autoSync>
+      <UnlinkProvider chain="monad-testnet" autoSync={false}>
         <UnlinkAwareMetaMaskProvider>{children}</UnlinkAwareMetaMaskProvider>
       </UnlinkProvider>
     </ThemeProvider>

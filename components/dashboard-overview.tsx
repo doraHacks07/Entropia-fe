@@ -16,23 +16,35 @@ import {
   EyeOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 export function DashboardOverview() {
   const { accounts, activeAccountIndex, balances: directBalances, refresh, busy, status } = useUnlink()
   const [hideBalances, setHideBalances] = useState(false)
+  const didInitialSync = useRef(false)
 
   // Use dedicated hooks -- these always call unconditionally (rules of hooks)
   const balHook = useUnlinkBalances()
   const histHook = useUnlinkHistory()
 
-  // Merge: prefer dedicated hook data, fall back to useUnlink direct
-  const balances: Record<string, bigint> = balHook?.balances || directBalances || {}
+  // Merge defensively: hook can be present but temporarily empty/stale.
+  const balances: Record<string, bigint> = useMemo(() => {
+    const fromHook = balHook?.balances ?? {}
+    const fromDirect = directBalances ?? {}
+    return Object.keys(fromHook).length > 0 ? fromHook : fromDirect
+  }, [balHook?.balances, directBalances])
   const balLoading = balHook?.loading ?? false
   const balReady = balHook?.ready ?? true
   const history = histHook?.history || []
   const histLoading = histHook?.loading ?? false
   const refreshHistory = histHook?.refresh || (() => {})
+
+  useEffect(() => {
+    if (didInitialSync.current) return
+    didInitialSync.current = true
+    refresh()
+    refreshHistory()
+  }, [refresh, refreshHistory])
 
   // Format balance entries
   const balanceEntries = Object.entries(balances || {}).map(([token, amount]) => ({
