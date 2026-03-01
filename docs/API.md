@@ -342,18 +342,19 @@ Creates a record for a sensitive transfer (withdrawal). Called after the client 
 - **Headers:** `Content-Type: application/json`
 - **Body:**
 
+-----------------------------------------------------------------------------------------------------------
 | Field          | Type    | Required | Description                                                       |
 |----------------|---------|----------|-------------------------------------------------------------------|
 | `type`         | string  | No       | Transfer type. Default: `"withdrawal"`.                           |
-| `token`        | string  | **Yes**  | Token contract address (use `0x0...0` for native token).           |
-| `recipient`    | string  | **Yes**  | Recipient **public** Ethereum address (0x..., 40 hex chars).     |
+| `token`        | string  | **Yes**  | Token contract address (use `0x0...0` for native token).          |
+| `recipient`    | string  | **Yes**  | Recipient **public** Ethereum address (0x..., 40 hex chars).      |
 | `amount`       | string  | **Yes**  | Amount as string (e.g. `"0.5"`). Must be > 0.                     |
-| `relayId`      | string  | No       | Relay/transaction ID from Unlink SDK.                            |
+| `relayId`      | string  | No       | Relay/transaction ID from Unlink SDK.                             |
 | `purpose`      | string  | No       | Purpose category: `personal`, `business`, `investment`, `other`.  |
-| `privacyLevel` | string  | No       | Privacy level: `standard`, `enhanced`, `maximum`.                |
+| `privacyLevel` | string  | No       | Privacy level: `standard`, `enhanced`, `maximum`.                 |
 | `encryptedMemo`| boolean | No       | Whether the memo was encrypted.                                   |
 | `memo`         | string  | No       | Optional memo (may be encrypted client-side).                     |
-
+-----------------------------------------------------------------------------------------------------------
 #### Validation Rules
 
 - `token`: Required, non-empty
@@ -454,7 +455,7 @@ Creates a record for a sensitive transfer (withdrawal). Called after the client 
 | Field            | Type   | Description                          |
 |------------------|--------|--------------------------------------|
 | `type`           | string | Event type (see allowed values)      |
-| `metamaskAddress`| string | MetaMask address (0x...)            |
+| `metamaskAddress`| string | MetaMask address (0x...)             |
 | `unlinkAddress`  | string | Unlink address (unlink1...)          |
 | `chainId`        | string | Chain ID (hex)                       |
 | `balanceHex`     | string | Balance in wei (hex)                 |

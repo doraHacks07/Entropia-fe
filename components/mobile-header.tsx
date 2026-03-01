@@ -19,6 +19,7 @@ import {
   Check,
 } from "lucide-react"
 import { cn, truncateAddress } from "@/lib/utils"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
 
@@ -60,7 +61,9 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
   return (
     <header className="flex items-center justify-between border-b border-border bg-sidebar px-4 py-3 lg:hidden">
       <NeoBankLogo size="sm" />
-      <Sheet open={open} onOpenChange={setOpen}>
+      <div className="flex items-center gap-1">
+        <ThemeToggle />
+        <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button
             variant="ghost"
@@ -118,7 +121,7 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
                 variant="ghost"
                 onClick={() => {
                   setOpen(false)
-                  window.location.href = "/?reset=1"
+                  window.location.href = "/connect?reset=1"
                 }}
                 className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
               >
@@ -129,6 +132,7 @@ export function MobileHeader({ currentView, onViewChange }: MobileHeaderProps) {
           </div>
         </SheetContent>
       </Sheet>
+      </div>
     </header>
   )
 }

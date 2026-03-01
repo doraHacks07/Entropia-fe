@@ -79,18 +79,18 @@ export function AnimatedBackground() {
       <div className="absolute inset-0 bg-background" />
 
       {/* Static gradient mesh - no animation to avoid flicker */}
-      <div className="absolute inset-0 opacity-[0.85]">
+      <div className="absolute inset-0 opacity-60 dark:opacity-[0.85]">
         <div className="aurora-shape aurora-1" />
         <div className="aurora-shape aurora-2" />
         <div className="aurora-shape aurora-3" />
         <div className="aurora-shape aurora-4" />
       </div>
 
-      {/* Static glowing orbs - no animation */}
+      {/* Static glowing orbs - lighter in light mode */}
       <div className="absolute inset-0">
-        <div className="absolute -left-32 -top-32 h-[600px] w-[600px] rounded-full opacity-[0.28] blur-[120px] bg-primary" />
-        <div className="absolute -right-32 top-1/4 h-[500px] w-[500px] rounded-full opacity-[0.22] blur-[100px] bg-chart-2" />
-        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 h-[400px] w-[700px] rounded-full opacity-[0.18] blur-[140px] bg-chart-3" />
+        <div className="absolute -left-32 -top-32 h-[600px] w-[600px] rounded-full opacity-[0.15] dark:opacity-[0.28] blur-[120px] bg-primary" />
+        <div className="absolute -right-32 top-1/4 h-[500px] w-[500px] rounded-full opacity-[0.12] dark:opacity-[0.22] blur-[100px] bg-chart-2" />
+        <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 h-[400px] w-[700px] rounded-full opacity-[0.1] dark:opacity-[0.18] blur-[140px] bg-chart-3" />
       </div>
 
       {/* Particle network canvas */}
@@ -109,12 +109,19 @@ export function AnimatedBackground() {
         }}
       />
 
-      {/* Radial vignette */}
+      {/* Radial vignette - light edges in light mode, dark edges in dark mode */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 hidden dark:block"
         style={{
           background:
             "radial-gradient(ellipse 80% 50% at 50% 50%, transparent 40%, rgba(0,0,0,0.6) 100%)",
+        }}
+      />
+      <div
+        className="absolute inset-0 block dark:hidden"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% 50%, transparent 50%, rgba(255,255,255,0.4) 100%)",
         }}
       />
 

@@ -28,6 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 type View = "dashboard" | "transfer" | "sensitive" | "deposit" | "history" | "architecture" | "settings"
 
@@ -165,8 +166,12 @@ export function DashboardSidebar({
           })}
         </nav>
 
-        {/* Disconnect */}
-        <div className="border-t border-border p-2">
+        {/* Theme & Disconnect */}
+        <div className="border-t border-border p-2 space-y-1">
+          <div className={cn("flex items-center gap-2", collapsed ? "justify-center" : "justify-between px-2")}>
+            {!collapsed && <span className="text-xs text-muted-foreground">Theme</span>}
+            <ThemeToggle />
+          </div>
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -175,7 +180,7 @@ export function DashboardSidebar({
                   size="icon"
                   onClick={() => {
                     clearOnboarding()
-                    window.location.href = "/?reset=1"
+                    window.location.href = "/connect?reset=1"
                   }}
                   className="w-full text-muted-foreground hover:text-destructive"
                   aria-label="Clear wallet"
@@ -190,7 +195,7 @@ export function DashboardSidebar({
               variant="ghost"
               onClick={() => {
                 clearOnboarding()
-                window.location.href = "/?reset=1"
+                window.location.href = "/connect?reset=1"
               }}
               className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
             >

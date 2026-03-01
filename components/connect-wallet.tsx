@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
+import Link from "next/link"
 import { useUnlink, shortenHex } from "@unlink-xyz/react"
 import { setOnboardingComplete } from "@/lib/onboarding"
 import { useMetaMask } from "@/lib/wallet-context"
@@ -25,6 +26,7 @@ import {
   Wallet,
 } from "lucide-react"
 import { toast } from "sonner"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 type OnboardStep = "landing" | "creating" | "mnemonic" | "importing" | "creating-account"
 
@@ -37,6 +39,8 @@ function logUnlink(step: string, data?: object) {
 
 export function ConnectWallet() {
   const router = useRouter()
+  const pathname = usePathname()
+  const resetHref = `${pathname || "/connect"}?reset=1`
   const {
     ready,
     walletExists,
@@ -407,8 +411,14 @@ export function ConnectWallet() {
     <div className="min-h-screen flex flex-col bg-transparent relative">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 lg:px-12">
-        <NeoBankLogo />
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            ← Home
+          </Link>
+          <NeoBankLogo />
+        </div>
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <span className="hidden sm:inline text-sm text-muted-foreground">
             Powered by Unlink Protocol
           </span>
@@ -554,7 +564,7 @@ export function ConnectWallet() {
       <footer className="px-6 py-4 text-center text-xs text-muted-foreground border-t border-border">
         NeoBank Protocol v1.0 &middot; Powered by Unlink &middot; All transfers are private onchain
         <span className="block mt-2">
-          <a href="/?reset=1" className="underline hover:text-foreground">
+          <a href={resetHref} className="underline hover:text-foreground">
             Start fresh / Clear all data
           </a>
         </span>
