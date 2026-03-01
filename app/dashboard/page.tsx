@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
   if (!mounted || !ready || !walletExists || !activeAccount || !isOnboardingComplete()) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <p className="text-sm text-muted-foreground">Redirecting...</p>
       </div>
     )

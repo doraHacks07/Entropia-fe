@@ -18,7 +18,7 @@ export function DashboardShell() {
   const [currentView, setCurrentView] = useState<View>("dashboard")
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-transparent relative">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <DashboardSidebar

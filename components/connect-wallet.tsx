@@ -190,7 +190,7 @@ export function ConnectWallet() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-4">
           <NeoBankLogo size="lg" />
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -205,7 +205,7 @@ export function ConnectWallet() {
   // Wallet exists but no active account
   if (walletExists && !activeAccount) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="min-h-screen flex items-center justify-center bg-transparent px-6">
         <Card className="w-full max-w-md bg-card border-border">
           <CardContent className="flex flex-col items-center py-10">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-5">
@@ -245,7 +245,7 @@ export function ConnectWallet() {
   if (step === "mnemonic" && mnemonic) {
     const words = mnemonic.split(" ")
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="min-h-screen flex items-center justify-center bg-transparent px-6">
         <div className="w-full max-w-lg">
           <div className="mb-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-4">
@@ -314,7 +314,7 @@ export function ConnectWallet() {
   // Creating state
   if (step === "creating" || step === "creating-account") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ export function ConnectWallet() {
   // Import wallet screen
   if (step === "importing") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-6">
+      <div className="min-h-screen flex items-center justify-center bg-transparent px-6">
         <div className="w-full max-w-lg">
           <div className="mb-8 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 mb-4">
@@ -404,7 +404,7 @@ export function ConnectWallet() {
 
   // Landing: no wallet yet
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-transparent relative">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 lg:px-12">
         <NeoBankLogo />

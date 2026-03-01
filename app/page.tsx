@@ -41,7 +41,7 @@ function LandingContent() {
 
   if (mounted && (searchParams.get("reset") === "1" || searchParams.get("fresh") === "1")) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <p className="text-sm text-muted-foreground">Clearing data...</p>
       </div>
     )
@@ -49,7 +49,7 @@ function LandingContent() {
 
   if (mounted && ready && walletExists && activeAccount && isOnboardingComplete()) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-transparent gap-4">
         <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
         <a href="/?reset=1" className="text-xs text-muted-foreground hover:text-foreground underline">
           Not you? Start fresh
@@ -60,7 +60,7 @@ function LandingContent() {
 
   if (mounted && ready && walletExists && activeAccount && !isOnboardingComplete()) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-6 px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-transparent gap-6 px-6">
         <p className="text-sm text-muted-foreground text-center max-w-md">
           We detected an existing wallet that wasn&apos;t set up through this app. Clear it to start fresh.
         </p>
@@ -84,7 +84,7 @@ function LandingContent() {
 export default function Page() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent">
         <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     }>

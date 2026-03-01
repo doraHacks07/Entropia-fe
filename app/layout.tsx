@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { Toaster } from 'sonner'
 import { Providers } from './providers'
+import { AnimatedBackground } from '@/components/animated-background'
 import './globals.css'
 
 const inter = Inter({
@@ -46,10 +47,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        <Providers>
-          {children}
-        </Providers>
+      <body className={`${inter.variable} font-sans antialiased relative`} suppressHydrationWarning>
+        <AnimatedBackground />
+        <div className="relative z-0">
+          <Providers>
+            {children}
+          </Providers>
+        </div>
         <Toaster theme="dark" position="top-right" richColors />
         <Analytics />
       </body>
